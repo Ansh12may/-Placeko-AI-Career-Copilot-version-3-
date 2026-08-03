@@ -24,35 +24,63 @@
 
 # text = parse_resume("/Users/ashutoshkushwaha/Desktop/Ashutosh_resume.pdf")
 # print(text)
+from backend.agents.job_search_agent import JobSearchAgent
+from backend.schemas.candidate import CandidateProfile
 
-from pathlib import Path
-from backend.graphs.workflow import graph
-from backend.graphs.state import GraphState
+
 def main():
-    state: GraphState = {
+
+    profile = CandidateProfile(
+        name="Ashutosh",
+        email="test@gmail.com",
+        phone="+91xxxxxxxxxx",
+        summary=None,
+        skills=[
+            "Python",
+            "FastAPI",
+            "LangGraph",
+            "MongoDB"
+        ],
+        education=[],
+        experience=[],
+        projects=[],
+        certifications=[],
+    )
+
+    state = {
         "messages": [],
-        "resume_path": Path("/Users/ashutoshkushwaha/Desktop/Ashutosh_resume.pdf"),
-        "resume_text": "",
-        "candidate_profile": None,
+        "resume_path": None,
+        "resume_text": None,
+        "candidate_profile": profile,
+        "jobs": None,
+        "ranked_jobs": None,
         "next_node": None,
         "error": None,
-
     }
-    try:
-        result = graph.invoke(state)
-        print("=" * 80)
-        print("RESUME TEXT")
-        print("=" * 80)
-        print(result["resume_text"])
-        print()
-        print("=" * 80)
-        print("CANDIDATE PROFILE")
-        print("=" * 80)
-        if result["candidate_profile"] is not None:
-            print(result["candidate_profile"].model_dump_json(indent=4))
-        else:
-            print("No candidate profile returned.")
-    except Exception as e:
-        print(f"\nError: {e}")
+
+    agent = JobSearchAgent()
+
+    result = agent.run(state)
+
+    jobs = result["jobs"]
+
+    print("=" * 80)
+    print(f"TOTAL JOBS FOUND : {len(jobs)}")
+    print("=" * 80)
+
+    for index, job in enumerate(jobs, start=1):
+
+        print(f"\nJOB #{index}")
+        print("-" * 80)
+
+        print(f"Title       : {job.title}")
+        print(f"Company     : {job.company}")
+        print(f"Location    : {job.location}")
+        print(f"Employment  : {job.employment_type}")
+        print(f"Salary      : {job.salary}")
+        print(f"Source      : {job.source}")
+        print(f"Apply URL   : {job.apply_url}")
+
+
 if __name__ == "__main__":
     main()

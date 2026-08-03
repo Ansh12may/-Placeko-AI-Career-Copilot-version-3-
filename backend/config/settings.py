@@ -3,6 +3,7 @@ import os
 from langchain_groq import ChatGroq
 load_dotenv()
 class Settings:
+    RAPID_API_KEY = os.getenv("RAPID_API_KEY")      
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
     GROQ_MODEL = os.getenv(
         "GROQ_MODEL",
@@ -19,3 +20,4 @@ class Settings:
             temperature=self.TEMPERATURE,
         )
 settings = Settings()
+

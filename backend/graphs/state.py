@@ -2,6 +2,7 @@
 from typing import Annotated, Optional
 from typing_extensions import TypedDict
 from backend.schemas.candidate import CandidateProfile
+from backend.schemas.job import Job
 from langchain_core.messages import AnyMessage
 import operator
 
@@ -18,7 +19,11 @@ class GraphState(TypedDict):
     resume_text: Optional[str]
     # Structured candidate profile
     candidate_profile: Optional[CandidateProfile]
+    #for job agents
+    jobs: Optional[list[Job]]
+    ranked_jobs: Optional[list[Job]]
     # Workflow metadata
     next_node: Optional[str]
     # Error information
     error: Optional[str]
+    
