@@ -1,19 +1,52 @@
 from langgraph.graph import StateGraph, START, END
+
 from backend.graphs.state import GraphState
-from backend.agents.resume_agent import ResumeAgent
-from backend.agents.job_search_agent import JobSearchAgent
+from backend.Jobs.agents.recommendation_agent import (
+    RecommendationAgent,
+)
+
+
+# =========================================================
+# Create Graph
+# =========================================================
+
 builder = StateGraph(GraphState)
-resume_agent = ResumeAgent()
-job_search_agent = JobSearchAgent()
+
+
+# =========================================================
+# Initialize Agents
+# =========================================================
+
+recommendation_agent = RecommendationAgent()
+
+
+# =========================================================
+# Register Nodes
+# =========================================================
+
 builder.add_node(
-    "resume_agent",
-    resume_agent.run,
+    "recommendation_agent",
+    recommendation_agent.run,
 )
-builder.add_node(
-    "job_search_agent",
-    job_search_agent.run,
+
+
+# =========================================================
+# Define Workflow
+# =========================================================
+
+builder.add_edge(
+    START,
+    "recommendation_agent",
 )
-builder.add_edge(START, "resume_agent")
-builder.add_edge("resume_agent","job_search_agent")
-builder.add_edge("job_search_agent", END)
+
+builder.add_edge(
+    "recommendation_agent",
+    END,
+)
+
+
+# =========================================================
+# Compile Graph
+# =========================================================
+
 graph = builder.compile()
