@@ -54,7 +54,7 @@ const FeaturesHeader = () => {
         "
       >
         From AI-powered resume optimization and semantic job matching
-        to voice-based mock interviews and career analytics,
+        to voice-based mock interviews and application tracking,
         Placeko supports every step of your placement journey.
       </motion.p>
     </div>

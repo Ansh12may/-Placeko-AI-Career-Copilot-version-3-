@@ -23,7 +23,7 @@ const mainMenuItems = [
     label: "Resume Library",
     icon: FileText,
     path: "/resume",
-    badge: 3,
+    
   },
   {
     label: "Resume Analysis",
@@ -34,13 +34,13 @@ const mainMenuItems = [
     label: "Recommended Jobs",
     icon: Briefcase,
     path: "/jobs",
-    badge: 24,
+    
   },
   {
     label: "Applications Pipeline",
     icon: ClipboardList,
     path: "/applications",
-    badge: 5,
+    
   },
   {
     label: "AI Mock Interview",
@@ -83,7 +83,7 @@ const SidebarMenu = () => {
             icon={item.icon}
             label={item.label}
             path={item.path}
-            badge={item.badge}
+           
           />
         ))}
       </div>

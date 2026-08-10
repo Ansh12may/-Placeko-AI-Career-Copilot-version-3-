@@ -15,10 +15,6 @@ import {
 } from "../api/auth";
 
 
-
-
-
-
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;

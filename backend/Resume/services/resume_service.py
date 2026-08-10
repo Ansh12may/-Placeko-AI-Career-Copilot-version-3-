@@ -59,6 +59,8 @@ class ResumeService:
 
         UploadFile
             ↓
+        Validate file
+            ↓
         Save temporary file
             ↓
         ResumeAgent
@@ -69,7 +71,11 @@ class ResumeService:
             ↓
         ATSReport
             ↓
-        MongoDB
+        Validate analysis
+            ↓
+        Deactivate old resume
+            ↓
+        Store new resume in MongoDB
         """
 
         # -----------------------------------------------------
@@ -101,13 +107,15 @@ class ResumeService:
         # 3. Create temporary file
         # -----------------------------------------------------
 
-        suffix = os.path.splitext(
-            file.filename
-        )[1] or ".pdf"
+        suffix = (
+            os.path.splitext(file.filename)[1]
+            or ".pdf"
+        )
 
         temp_path = None
 
         try:
+
             with tempfile.NamedTemporaryFile(
                 delete=False,
                 suffix=suffix,
@@ -118,15 +126,13 @@ class ResumeService:
                 temp_path = temp_file.name
 
             # -------------------------------------------------
-            # 4. Deactivate existing resumes
-            # -------------------------------------------------
-
-            await self.repository.deactivate_all_resumes(
-                user_id
-            )
-
-            # -------------------------------------------------
-            # 5. Prepare GraphState
+            # 4. Prepare GraphState
+            #
+            # IMPORTANT:
+            # We do NOT deactivate the old resume here.
+            #
+            # The old resume should remain active if the new
+            # resume fails during analysis.
             # -------------------------------------------------
 
             state: GraphState = {
@@ -156,7 +162,7 @@ class ResumeService:
             }
 
             # -------------------------------------------------
-            # 6. Run Resume Agent
+            # 5. Run Resume Agent
             # -------------------------------------------------
 
             state = self.resume_agent.run(
@@ -164,7 +170,7 @@ class ResumeService:
             )
 
             # -------------------------------------------------
-            # 7. Run ATS Analysis Agent
+            # 6. Run ATS Analysis Agent
             # -------------------------------------------------
 
             state = (
@@ -174,7 +180,7 @@ class ResumeService:
             )
 
             # -------------------------------------------------
-            # 8. Validate results
+            # 7. Validate analysis results
             # -------------------------------------------------
 
             candidate_profile = state.get(
@@ -198,7 +204,18 @@ class ResumeService:
                 )
 
             # -------------------------------------------------
-            # 9. Store resume in MongoDB
+            # 8. Deactivate existing resumes
+            #
+            # IMPORTANT:
+            # This happens ONLY after successful analysis.
+            # -------------------------------------------------
+
+            await self.repository.deactivate_all_resumes(
+                user_id
+            )
+
+            # -------------------------------------------------
+            # 9. Store new resume in MongoDB
             # -------------------------------------------------
 
             now = datetime.now(
@@ -241,7 +258,7 @@ class ResumeService:
             )
 
             # -------------------------------------------------
-            # 10. Return API data
+            # 10. Return API response
             # -------------------------------------------------
 
             return {
@@ -272,8 +289,9 @@ class ResumeService:
             # 11. Remove temporary file
             # -------------------------------------------------
 
-            if temp_path and os.path.exists(
+            if (
                 temp_path
+                and os.path.exists(temp_path)
             ):
                 os.remove(temp_path)
 
@@ -305,29 +323,32 @@ class ResumeService:
     # =========================================================
 
     async def get_resume(
-    self,
-    user_id: str,
-    resume_id: str,
-):
+        self,
+        user_id: str,
+        resume_id: str,
+    ):
         """
         Return a specific resume belonging
         to the authenticated user.
         """
 
-        resume = await self.repository.get_resume_by_id(
-            resume_id=resume_id,
-            user_id=user_id,
+        resume = (
+            await self.repository.get_resume_by_id(
+                resume_id=resume_id,
+                user_id=user_id,
+            )
         )
 
         if not resume:
             raise ValueError(
                 "Resume not found."
-        )
+            )
 
         return {
-        "success": True,
-        "data": resume,
-    }
+            "success": True,
+            "data": resume,
+        }
+
     # =========================================================
     # Set Active Resume
     # =========================================================

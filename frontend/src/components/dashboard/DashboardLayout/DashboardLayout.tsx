@@ -1,4 +1,8 @@
-import type { ReactNode } from "react";
+import {
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 
 import Sidebar from "./Sidebar/Sidebar";
 import TopBar from "./TopBar";
@@ -10,6 +14,69 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({
   children,
 }: DashboardLayoutProps) => {
+
+  // =========================================================
+  // Dark Mode
+  // =========================================================
+
+  const [isDarkMode, setIsDarkMode] =
+    useState(() => {
+      const savedTheme =
+        localStorage.getItem("theme");
+
+      if (savedTheme === "dark") {
+        return true;
+      }
+
+      if (savedTheme === "light") {
+        return false;
+      }
+
+      return document.documentElement.classList.contains(
+        "dark"
+      );
+    });
+
+
+  // =========================================================
+  // Apply Theme
+  // =========================================================
+
+  useEffect(() => {
+
+    const root =
+      document.documentElement;
+
+    root.classList.toggle(
+      "dark",
+      isDarkMode
+    );
+
+    localStorage.setItem(
+      "theme",
+      isDarkMode
+        ? "dark"
+        : "light"
+    );
+
+  }, [isDarkMode]);
+
+
+  // =========================================================
+  // Toggle Theme
+  // =========================================================
+
+  const handleToggleDarkMode = () => {
+    setIsDarkMode(
+      (previous) => !previous
+    );
+  };
+
+
+  // =========================================================
+  // Layout
+  // =========================================================
+
   return (
     <div
       className="
@@ -21,19 +88,35 @@ const DashboardLayout = ({
         dark:bg-slate-950
       "
     >
-      {/* Global Top Bar */}
 
-      <TopBar />
+      {/* =====================================================
+          Global Top Bar
+          ===================================================== */}
 
-      {/* Application Body */}
+      <TopBar
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={
+          handleToggleDarkMode
+        }
+      />
+
+
+      {/* =====================================================
+          Application Body
+          ===================================================== */}
 
       <div className="flex min-h-0 flex-1">
 
-        {/* Sidebar */}
+        {/* ===================================================
+            Sidebar
+            =================================================== */}
 
         <Sidebar />
 
-        {/* Main Content */}
+
+        {/* ===================================================
+            Main Content
+            =================================================== */}
 
         <main
           className="
@@ -45,10 +128,13 @@ const DashboardLayout = ({
             dark:bg-slate-950
           "
         >
+
           {children}
+
         </main>
 
       </div>
+
     </div>
   );
 };

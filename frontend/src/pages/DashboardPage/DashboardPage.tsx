@@ -9,103 +9,573 @@ import RecentActivity from "../../components/dashboard/RecentActivity";
 
 import { getCurrentUser } from "../../api/auth";
 import { getResumes } from "../../api/resume";
+import { getApplications } from "../../api/application";
+import {
+  getRecommendedJobs,
+  type Job,
+} from "../../api/job";
 
 import type { User } from "../../api/auth";
 import type { ResumeLibraryItem } from "../../types/resume";
+import type { Application } from "../../types/application";
+
+import { getInterviewHistory } from "../../api/interview";
+import type { InterviewSession } from "../../types/interview";
+
+import type { Activity } from "../../components/dashboard/RecentActivity/types";
+
+
+// =========================================================
+// Dashboard Page
+// =========================================================
 
 const DashboardPage = () => {
   const navigate = useNavigate();
 
-  const [user, setUser] = useState<User | null>(null);
+  // =========================================================
+  // State
+  // =========================================================
+
+  const [user, setUser] =
+    useState<User | null>(null);
+
   const [activeResume, setActiveResume] =
     useState<ResumeLibraryItem | null>(null);
 
+  const [applications, setApplications] =
+    useState<Application[]>([]);
+
+  const [jobMatches, setJobMatches] =
+    useState(0);
+
+  const [recommendedJobs, setRecommendedJobs] =
+    useState<Job[]>([]);
+
+  const [interviews, setInterviews] =
+    useState<InterviewSession[]>([]);
+
+  const [isLoading, setIsLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState<string | null>(null);
+
+
+  // =========================================================
+  // Load Dashboard Data
+  // =========================================================
+
   useEffect(() => {
     const loadDashboardData = async () => {
-      console.log("Dashboard: loading started");
-
       try {
-        console.log("Dashboard: requesting current user...");
+        setIsLoading(true);
+        setError(null);
 
-        const currentUser = await getCurrentUser();
+        // -----------------------------------------------------
+        // Load all dashboard data in parallel
+        // -----------------------------------------------------
 
-        console.log(
-          "Dashboard: current user received:",
-          currentUser
-        );
+        const [
+  currentUser,
+  resumeResponse,
+  applicationData,
+  recommendedJobData,
+  interviewHistory,
+] = await Promise.all([
+  getCurrentUser(),
+  getResumes(),
+  getApplications(),
+  getRecommendedJobs().catch((error) => {
+    console.error(
+      "Dashboard: failed to load recommended jobs:",
+      error
+    );
+
+    return [];
+  }),
+  getInterviewHistory(),
+]);
+
+        // -----------------------------------------------------
+        // User
+        // -----------------------------------------------------
 
         setUser(currentUser);
 
-        console.log("Dashboard: requesting resumes...");
 
-        const resumeResponse = await getResumes();
+        // -----------------------------------------------------
+        // Active Resume
+        // -----------------------------------------------------
 
-        console.log(
-          "Dashboard: resume response:",
-          resumeResponse
+        const activeResume =
+          resumeResponse.data.find(
+            (resume) => resume.is_active
+          ) ?? null;
+
+        setActiveResume(activeResume);
+
+
+        // -----------------------------------------------------
+        // Applications
+        // -----------------------------------------------------
+
+        setApplications(
+          applicationData
         );
 
-        const active = resumeResponse.data.find(
-          (resume) => resume.is_active
+
+        // -----------------------------------------------------
+        // Interviews
+        // -----------------------------------------------------
+
+        setInterviews(
+          interviewHistory
         );
 
-        console.log(
-          "Dashboard: active resume:",
-          active
+
+        // -----------------------------------------------------
+        // Recommended Jobs
+        // -----------------------------------------------------
+
+        setRecommendedJobs(
+          recommendedJobData
         );
 
-        setActiveResume(active ?? null);
-
-        console.log("Dashboard: loading finished");
+        setJobMatches(
+          recommendedJobData.length
+        );
 
       } catch (error) {
+
         console.error(
           "Dashboard: failed to load data:",
           error
         );
+
+        setError(
+          "Unable to load your dashboard data."
+        );
+
+      } finally {
+
+        setIsLoading(false);
+
       }
     };
 
     loadDashboardData();
   }, []);
 
+
+  // =========================================================
+  // Interview Readiness
+  // =========================================================
+
+  const completedInterviews =
+    interviews.filter(
+      (interview) =>
+        interview.status === "Completed" &&
+        interview.report
+    );
+
+
+  const interviewReadiness =
+    completedInterviews.length > 0
+      ? Math.round(
+          (
+            completedInterviews.reduce(
+              (total, interview) =>
+                total +
+                interview.report!.overall_score.score,
+              0
+            ) /
+            completedInterviews.length
+          ) * 10
+        )
+      : null;
+
+
+  // =========================================================
+  // Improvement Areas
+  // =========================================================
+
+  const improvementAreas =
+    activeResume
+      ? new Set([
+          ...activeResume.ats_report.weaknesses,
+          ...activeResume.ats_report.missing_keywords,
+        ]).size
+      : 0;
+
+
+  // =========================================================
+  // Recent Activity
+  // =========================================================
+
+  const activities: Activity[] = [
+
+    // -------------------------------------------------------
+    // Resume Activity
+    // -------------------------------------------------------
+
+    ...(activeResume
+      ? [
+          {
+            id: 1,
+
+            title: "Resume analyzed",
+
+            description:
+              `Your resume received an ATS score of ${Math.round(
+                activeResume.ats_report.overall_score
+              )}.`,
+
+            time:
+              formatRelativeTime(
+                activeResume.updated_at
+              ),
+
+            type: "resume" as const,
+
+            timestamp:
+              new Date(
+                activeResume.updated_at
+              ).getTime(),
+          },
+        ]
+      : []),
+
+
+    // -------------------------------------------------------
+    // Interview Activity
+    // -------------------------------------------------------
+
+    ...interviews
+      .filter(
+        (interview) =>
+          interview.status === "Completed"
+      )
+      .map(
+        (interview, index) => {
+
+          const timestamp =
+            new Date(
+              interview.started_at
+            ).getTime();
+
+          return {
+            id: 100 + index,
+
+            title:
+              "Interview completed",
+
+            description:
+              interview.report
+                ? `You scored ${interview.report.overall_score.score.toFixed(
+                    1
+                  )}/10 in your AI mock interview.`
+                : "Your AI mock interview was completed.",
+
+            time:
+              formatRelativeTime(
+                interview.started_at
+              ),
+
+            type: "interview" as const,
+
+            timestamp,
+          };
+        }
+      ),
+
+
+    // -------------------------------------------------------
+    // Application Activity
+    //
+    // We only use the confirmed `status` field here.
+    // Until we have the exact application timestamp field,
+    // these activities are placed after timestamped events.
+    // -------------------------------------------------------
+
+    ...applications.map(
+      (application, index) => ({
+        id: 200 + index,
+
+        title:
+          "Application activity",
+
+        description:
+          `Application status: ${formatApplicationStatus(
+            application.status
+          )}`,
+
+        time:
+          "Recently",
+
+        type: "job" as const,
+
+        timestamp:
+          0,
+      })
+    ),
+
+  ]
+    // -------------------------------------------------------
+    // Sort newest first
+    // -------------------------------------------------------
+
+    .sort(
+      (a, b) =>
+        b.timestamp - a.timestamp
+    )
+
+    // -------------------------------------------------------
+    // Keep latest five
+    // -------------------------------------------------------
+
+    .slice(0, 5)
+
+    // -------------------------------------------------------
+    // Remove internal timestamp before passing to UI
+    // -------------------------------------------------------
+
+    .map(
+      ({
+        timestamp,
+        ...activity
+      }) => activity
+    );
+
+
+  // =========================================================
+  // Loading State
+  // =========================================================
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[500px] items-center justify-center">
+
+        <div className="text-sm font-medium text-slate-500">
+          Loading your career dashboard...
+        </div>
+
+      </div>
+    );
+  }
+
+
+  // =========================================================
+  // Error State
+  // =========================================================
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-5">
+
+        <p className="text-sm font-semibold text-red-600">
+          {error}
+        </p>
+
+      </div>
+    );
+  }
+
+
+  // =========================================================
+  // Dashboard
+  // =========================================================
+
   return (
     <>
+
+      {/* =====================================================
+          Welcome Banner
+          ===================================================== */}
+
       <WelcomeBanner
-        userName={user?.full_name || "there"}
+        userName={
+          user?.full_name || "there"
+        }
+
         resumeName={
           activeResume?.file_name ||
           "No resume uploaded"
         }
-        matchedJobs={24}
-        improvementAreas={3}
-        hasResume={!!activeResume}
-        onViewMatches={() => navigate("/jobs")}
-        onStartInterview={() => navigate("/interview")}
+
+        matchedJobs={
+          jobMatches
+        }
+
+        improvementAreas={
+          improvementAreas
+        }
+
+        hasResume={
+          !!activeResume
+        }
+
+        onViewMatches={() =>
+          navigate("/jobs")
+        }
+
+        onStartInterview={() =>
+          navigate("/interview")
+        }
       />
+
+
+      {/* =====================================================
+          Statistics
+          ===================================================== */}
 
       <StatsGrid
         resumeScore={
-          activeResume?.ats_score ?? null
+          activeResume?.ats_report.overall_score ??
+          null
         }
-        jobMatches={24}
+
+        jobMatches={
+          jobMatches
+        }
+
+        applications={
+          applications.length
+        }
+
+        interviewReadiness={
+          interviewReadiness
+        }
       />
+
+
+      {/* =====================================================
+          Quick Actions
+          ===================================================== */}
 
       <QuickActions />
 
-      <div className="mt-8 grid grid-cols-6 gap-8 xl:grid-cols-3">
+
+      {/* =====================================================
+          Jobs + Recent Activity
+          ===================================================== */}
+
+      <div className="mt-8 grid grid-cols-1 gap-8 xl:grid-cols-3">
+
+        {/* ---------------------------------------------------
+            Recommended Jobs
+            --------------------------------------------------- */}
 
         <div className="xl:col-span-2">
-          <JobRecommendations />
+
+          <JobRecommendations
+            jobs={recommendedJobs}
+          />
+
         </div>
 
+
+        {/* ---------------------------------------------------
+            Recent Activity
+            --------------------------------------------------- */}
+
         <div>
-          <RecentActivity />
+
+          <RecentActivity
+            activities={activities}
+          />
+
         </div>
 
       </div>
+
     </>
   );
 };
+
+
+// =========================================================
+// Relative Time
+// =========================================================
+
+const formatRelativeTime = (
+  date: string
+): string => {
+
+  const timestamp =
+    new Date(date).getTime();
+
+  if (Number.isNaN(timestamp)) {
+    return "Recently";
+  }
+
+  const difference =
+    Date.now() - timestamp;
+
+  const minutes =
+    Math.floor(
+      difference / (1000 * 60)
+    );
+
+  if (minutes < 1) {
+    return "Just now";
+  }
+
+  if (minutes < 60) {
+    return `${minutes} min ago`;
+  }
+
+  const hours =
+    Math.floor(
+      minutes / 60
+    );
+
+  if (hours < 24) {
+    return `${hours} hr ago`;
+  }
+
+  const days =
+    Math.floor(
+      hours / 24
+    );
+
+  if (days === 1) {
+    return "Yesterday";
+  }
+
+  if (days < 7) {
+    return `${days} days ago`;
+  }
+
+  return new Date(
+    date
+  ).toLocaleDateString(
+    "en-IN",
+    {
+      day: "numeric",
+      month: "short",
+    }
+  );
+};
+
+
+// =========================================================
+// Application Status Formatting
+// =========================================================
+
+const formatApplicationStatus = (
+  status: string
+): string => {
+
+  if (!status) {
+    return "Unknown";
+  }
+
+  return status
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) =>
+      char.toUpperCase()
+    );
+};
+
 
 export default DashboardPage;

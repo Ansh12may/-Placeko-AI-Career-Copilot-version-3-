@@ -48,7 +48,7 @@ class RerankerService:
         self,
         candidate_profile: CandidateProfile,
         jobs: List[Job],
-        top_k: int = 5,
+        top_k: int = 10,
     ) -> List[Job]:
         """
         Rerank candidate jobs using CrossEncoder relevance.

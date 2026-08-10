@@ -4,13 +4,20 @@ import { stats } from "./data";
 interface StatsGridProps {
   resumeScore: number | null;
   jobMatches: number;
+  applications: number;
+  interviewReadiness: number | null;
 }
 
 const StatsGrid = ({
   resumeScore,
   jobMatches,
+  applications,
+  interviewReadiness,
 }: StatsGridProps) => {
+    
+
   const dynamicStats = stats.map((stat) => {
+
     if (stat.title === "Resume Score") {
       return {
         ...stat,
@@ -28,6 +35,22 @@ const StatsGrid = ({
       };
     }
 
+    if (stat.title === "Applications") {
+      return {
+        ...stat,
+        value: String(applications),
+      };
+    }
+
+    if (stat.title === "Interview Readiness") {
+      return {
+        ...stat,
+        value:
+          interviewReadiness !== null
+            ? `${interviewReadiness}%`
+            : "Not assessed",
+      };
+    }
     return stat;
   });
 

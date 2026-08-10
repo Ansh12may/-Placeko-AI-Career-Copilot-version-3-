@@ -4,6 +4,12 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 });
 
+console.log(
+  "API BASE URL:",
+  import.meta.env.VITE_API_URL
+);
+
+
 api.interceptors.request.use(
   (config) => {
     const token =
@@ -14,21 +20,18 @@ api.interceptors.request.use(
         `Bearer ${token}`;
     }
 
-    // -------------------------------------------------------
-    // JSON requests
-    // -------------------------------------------------------
-    // Only set JSON content type when the request
-    // is NOT using FormData.
-    //
-    // For FormData, the browser must automatically
-    // generate multipart/form-data + boundary.
-    // -------------------------------------------------------
+    if (
+      config.data instanceof FormData
+    ) {
+      delete config.headers[
+        "Content-Type"
+      ];
+    } else {
+      config.headers[
+        "Content-Type"
+      ] = "application/json";
 
-    if (!(config.data instanceof FormData)) {
-      config.headers["Content-Type"] =
-        "application/json";
     }
-
     return config;
   },
   (error) => {

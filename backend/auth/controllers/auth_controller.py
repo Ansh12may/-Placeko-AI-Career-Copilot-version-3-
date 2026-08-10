@@ -5,6 +5,8 @@ from backend.auth.schemas.login_request import LoginRequest
 from fastapi import Depends
 from backend.auth.dependency.auth_dependency import get_current_user
 from backend.auth.schemas.refresh_request import RefreshRequest
+from fastapi.responses import RedirectResponse
+from backend.config.settings import settings
 
 router = APIRouter(
     prefix="/api/auth",
@@ -47,4 +49,44 @@ async def refresh(request: RefreshRequest):
 @router.post("/logout")
 async def logout():
     return await auth_service.logout()
+
+
+@router.get("/google")
+async def google_login():
+    """
+    Redirect user to Google OAuth.
+    """
+
+    result = await auth_service.google_login()
+
+    return RedirectResponse(
+        url=result["authorization_url"]
+    )
+
+
+@router.get("/google/callback")
+async def google_callback(
+    code: str,
+):
+    """
+    Google OAuth callback.
+    """
+
+    result = await auth_service.google_callback(
+        code=code,
+    )
+
+    access_token = result["data"]["access_token"]
+    refresh_token = result["data"]["refresh_token"]
+
+    redirect_url = (
+        f"{settings.FRONTEND_URL}"
+        f"/oauth/callback"
+        f"?access_token={access_token}"
+        f"&refresh_token={refresh_token}"
+    )
+
+    return RedirectResponse(
+        url=redirect_url
+    )
 

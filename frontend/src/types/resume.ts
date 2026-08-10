@@ -89,14 +89,21 @@ export interface ResumeDetail {
 export interface ResumeLibraryItem {
 
   id: string;
-  user_id: string;
+
   file_name: string;
+
   file_size: number;
-  content_type: string;
-  candidate_profile: CandidateProfile;
-  ats_report: ATSReport;
+
+  content_type: string | null;
+
+  candidate_name: string | null;
+
+  ats_score: number | null;
+
   is_active: boolean;
+
   created_at: string;
+
   updated_at: string;
 
 }
@@ -114,5 +121,12 @@ export interface ResumeDetailResponse {
 export interface ResumeUploadResponse {
   success: boolean;
   message: string;
-  data: ResumeDetail;
+  data: {
+    resume_id: string;
+    file_name: string;
+    candidate_profile: CandidateProfile;
+    ats_report: ATSReport;
+    is_active: boolean;
+  };
+
 }

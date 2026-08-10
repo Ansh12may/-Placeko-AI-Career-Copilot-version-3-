@@ -44,7 +44,7 @@ const Footer = () => {
 
               <li><a href="#" className="hover:text-white">Mock Interview</a></li>
 
-              <li><a href="#" className="hover:text-white">Learning Roadmap</a></li>
+              <li><a href="#" className="hover:text-white">Application Tracking</a></li>
 
             </ul>
           </div>

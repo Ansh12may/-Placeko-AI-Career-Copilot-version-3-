@@ -46,40 +46,7 @@ const OAuthButtons = ({
         Continue with Google
       </button>
 
-      {/* GitHub */}
-
-      <button
-        type="button"
-        onClick={onGithub}
-        className="
-          flex
-          w-full
-          items-center
-          justify-center
-          gap-3
-          rounded-xl
-          border
-          border-slate-200
-          bg-white
-          px-4
-          py-3
-          text-sm
-          font-semibold
-          text-slate-700
-          transition-all
-          hover:bg-slate-50
-          hover:shadow-sm
-          dark:border-slate-700
-          dark:bg-slate-800
-          dark:text-slate-200
-          dark:hover:bg-slate-700
-        "
-      >
-        <FaGithub size={19} />
-
-        Continue with GitHub
-      </button>
-
+      
     </div>
   );
 };

@@ -14,6 +14,7 @@ export const quickActions: QuickAction[] = [
     description: "Manage all your resumes",
     icon: FileText,
     color: "bg-indigo-600",
+    route: "/resume",
   },
   {
     id: 2,
@@ -21,6 +22,7 @@ export const quickActions: QuickAction[] = [
     description: "Discover AI matched jobs",
     icon: Briefcase,
     color: "bg-emerald-500",
+    route: "/jobs",
   },
   {
     id: 3,
@@ -28,12 +30,14 @@ export const quickActions: QuickAction[] = [
     description: "Practice with AI interviewer",
     icon: Mic,
     color: "bg-orange-500",
+    route: "/interview",
   },
   {
     id: 4,
-    title: "Learning Roadmap",
+    title: "Application Roadmap",
     description: "Track your preparation",
     icon: BookOpen,
     color: "bg-pink-500",
+    route: "/learning-roadmap",
   },
 ];

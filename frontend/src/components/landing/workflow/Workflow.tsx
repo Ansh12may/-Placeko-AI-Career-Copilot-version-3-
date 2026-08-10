@@ -4,7 +4,7 @@ import WorkflowTimeline from "./WorkflowTimeline";
 const Workflow = () => {
   return (
     <section
-      id="workflow"
+      id="how-it-works"
       className="
         py-24
         px-6

@@ -10,8 +10,38 @@ const InteractiveDemo = () => {
     useState("Frontend Engineer");
 
   return (
-    <section className="py-24 px-6 bg-slate-100/70 dark:bg-slate-900/40">
-      <div className="mx-auto max-w-6xl space-y-10">
+    <section
+      id="demo"
+      className="
+        relative
+        overflow-hidden
+        bg-slate-50
+        px-6
+        py-24
+        dark:bg-slate-950
+      "
+    >
+
+      {/* Background Glow */}
+
+      <div
+        className="
+          pointer-events-none
+          absolute
+          left-1/2
+          top-0
+          h-[400px]
+          w-[700px]
+          -translate-x-1/2
+          rounded-full
+          bg-indigo-500/5
+          blur-3xl
+        "
+      />
+
+      {/* Demo Content */}
+
+      <div className="relative z-10 mx-auto max-w-6xl space-y-10">
 
         <DemoHeader />
 
@@ -29,6 +59,7 @@ const InteractiveDemo = () => {
         />
 
       </div>
+
     </section>
   );
 };

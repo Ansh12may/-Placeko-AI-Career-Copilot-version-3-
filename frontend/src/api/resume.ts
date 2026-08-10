@@ -6,6 +6,8 @@ import type {
   ResumeUploadResponse,
 } from "../types/resume";
 
+
+
 export const getResumes = async (): Promise<ResumeListResponse> => {
   const response = await api.get<ResumeListResponse>(
     "/api/resume"
@@ -13,6 +15,7 @@ export const getResumes = async (): Promise<ResumeListResponse> => {
 
   return response.data;
 };
+
 
 export const getResumeById = async (
   resumeId: string
@@ -24,22 +27,35 @@ export const getResumeById = async (
   return response.data;
 };
 
+
 export const uploadResume = async (
   file: File
 ): Promise<ResumeUploadResponse> => {
+
   const formData = new FormData();
 
   formData.append("file", file);
 
-  const response = await api.post<ResumeUploadResponse>(
-    "/api/resume/upload",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+  const response =
+    await api.post<ResumeUploadResponse>(
+      "/api/resume/upload",
+      formData
+    );
 
   return response.data;
+};
+
+
+// =========================================================
+// Delete Resume
+// =========================================================
+
+export const deleteResume = async (
+  resumeId: string
+): Promise<void> => {
+
+  await api.delete(
+    `/api/resume/${resumeId}`
+  );
+
 };

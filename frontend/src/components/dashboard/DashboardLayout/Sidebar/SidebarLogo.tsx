@@ -1,6 +1,9 @@
+import { Link } from "react-router-dom";
+
 const SidebarLogo = () => {
   return (
-    <div
+    <Link
+      to="/dashboard"
       className="
         flex
         items-center
@@ -9,7 +12,10 @@ const SidebarLogo = () => {
         border-slate-200
         px-5
         py-5
+        transition
+        hover:bg-slate-50
         dark:border-slate-800
+        dark:hover:bg-slate-900
       "
     >
       {/* Logo */}
@@ -61,7 +67,7 @@ const SidebarLogo = () => {
           AI Career Copilot
         </p>
       </div>
-    </div>
+    </Link>
   );
 };
 

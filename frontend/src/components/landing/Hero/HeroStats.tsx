@@ -1,63 +1,82 @@
 const HeroStats = () => {
-  const stats = [
+  const capabilities = [
     {
-      value: "12,400+",
-      label: "Candidates Placed",
+      value: "AI",
+      label: "Resume Intelligence",
+      description: "Understand your career profile",
       color: "text-slate-900 dark:text-white",
     },
     {
-      value: "94.8%",
-      label: "ATS Pass Rate",
+      value: "NLP",
+      label: "Semantic Job Matching",
+      description: "Match skills beyond keywords",
       color: "text-indigo-600 dark:text-indigo-400",
     },
     {
-      value: "$148k",
-      label: "Average Salary",
-      color: "text-emerald-600 dark:text-emerald-400",
+      value: "LLM",
+      label: "Personalized Interviews",
+      description: "Questions built around your profile",
+      color: "text-purple-600 dark:text-purple-400",
     },
     {
-      value: "3.2x",
-      label: "More Interviews",
-      color: "text-purple-600 dark:text-purple-400",
+      value: "DB",
+      label: "Application Pipeline",
+      description: "Track applications persistently",
+      color: "text-emerald-600 dark:text-emerald-400",
     },
   ];
 
   return (
-    <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-5">
-      {stats.map((stat) => (
+    <div className="mt-20 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+      {capabilities.map((capability) => (
         <div
-          key={stat.label}
+          key={capability.label}
           className="
             rounded-2xl
             border
             border-slate-200
-            dark:border-slate-800
             bg-white
-            dark:bg-slate-900
             p-5
             text-center
             shadow-sm
             transition-all
             duration-300
             hover:-translate-y-1
+            hover:border-indigo-200
             hover:shadow-lg
+            dark:border-slate-800
+            dark:bg-slate-900
+            dark:hover:border-indigo-900
           "
         >
           <h3
-            className={`text-3xl font-extrabold font-mono ${stat.color}`}
+            className={`text-2xl font-extrabold tracking-tight ${capability.color}`}
           >
-            {stat.value}
+            {capability.value}
           </h3>
 
           <p
             className="
               mt-2
               text-sm
+              font-bold
+              text-slate-800
+              dark:text-white
+            "
+          >
+            {capability.label}
+          </p>
+
+          <p
+            className="
+              mt-1
+              text-xs
+              leading-5
               text-slate-500
               dark:text-slate-400
             "
           >
-            {stat.label}
+            {capability.description}
           </p>
         </div>
       ))}

@@ -5,6 +5,7 @@ import LoginForm from "../../components/auth/LoginForm";
 import RegisterForm from "../../components/auth/RegisterForm";
 
 type AuthMode = "login" | "register";
+
 const AuthPage = () => {
   const [mode, setMode] = useState<AuthMode>("login");
 
@@ -21,11 +22,8 @@ const AuthPage = () => {
   };
 
   const handleGoogle = () => {
-    console.log("Google authentication");
-  };
-
-  const handleGithub = () => {
-    console.log("GitHub authentication");
+    window.location.href =
+      `${import.meta.env.VITE_API_URL}/api/auth/google`;
   };
 
   return (
@@ -46,7 +44,6 @@ const AuthPage = () => {
           <LoginForm
             onLogin={handleLoginSuccess}
             onGoogle={handleGoogle}
-            onGithub={handleGithub}
             onSignup={() => setMode("register")}
             onForgotPassword={() =>
               console.log("Forgot password")
@@ -56,7 +53,6 @@ const AuthPage = () => {
           <RegisterForm
             onRegister={handleRegisterSuccess}
             onGoogle={handleGoogle}
-            onGithub={handleGithub}
             onLogin={() => setMode("login")}
           />
         )}

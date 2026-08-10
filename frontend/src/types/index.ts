@@ -8,7 +8,6 @@ export type NavigationTab =
   | 'applications'
   | 'mock-interview'
   | 'interview-report'
-  | 'learning-roadmap'
   | 'profile'
   | 'settings';
 

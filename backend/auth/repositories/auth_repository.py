@@ -1,49 +1,154 @@
 """
 Auth Repository
+
 Responsible for:
 - User CRUD operations
 - MongoDB interactions
+
 This repository performs NO business logic.
 """
+
 from bson import ObjectId
+
 from backend.database.db import database
 from backend.auth.models.user import User
 
+
 class AuthRepository:
-    @property   #@property is a Python decorator that lets you call a method like an attribute.
+
+    @property
     def collection(self):
+        """
+        Return the MongoDB users collection.
+        """
         return database.db["users"]
 
-    async def create_user(self, user: User) -> str:
+    # =========================================================
+    # Create User
+    # =========================================================
+
+    async def create_user(
+        self,
+        user: User,
+    ) -> str:
         """
         Insert a new user into MongoDB.
-        Returns the inserted document ID.
+
+        Returns:
+            str: MongoDB inserted document ID.
         """
+
         result = await self.collection.insert_one(
-            user.model_dump(by_alias=True, exclude={"id"})
+            user.model_dump(
+                by_alias=True,
+                exclude={"id"},
+            )
         )
+
         return str(result.inserted_id)
 
-    async def get_user_by_email(self, email: str):
+    # =========================================================
+    # Get User By Email
+    # =========================================================
+
+    async def get_user_by_email(
+        self,
+        email: str,
+    ):
+        """
+        Find a user by email address.
+        """
+
         return await self.collection.find_one(
-            {"email": email}
+            {
+                "email": email,
+            }
         )
 
-    async def get_user_by_id(self, user_id: str):
+    # =========================================================
+    # Get User By ID
+    # =========================================================
+
+    async def get_user_by_id(
+        self,
+        user_id: str,
+    ):
         """
         Find a user by MongoDB ObjectId.
         """
+
         return await self.collection.find_one(
-            {"_id": ObjectId(user_id)}
+            {
+                "_id": ObjectId(user_id),
+            }
         )
 
-    async def update_user(self, user_id: str, update_data: dict):
+    # =========================================================
+    # Get User By Provider
+    # =========================================================
+
+    async def get_user_by_provider(
+        self,
+        provider: str,
+        provider_id: str,
+    ):
+        """
+        Find a user using an OAuth provider.
+
+        Example:
+
+            provider="google"
+            provider_id="123456789"
+
+        or:
+
+            provider="github"
+            provider_id="987654321"
+        """
+
+        return await self.collection.find_one(
+            {
+                "provider": provider,
+                "provider_id": provider_id,
+            }
+        )
+
+    # =========================================================
+    # Update User
+    # =========================================================
+
+    async def update_user(
+        self,
+        user_id: str,
+        update_data: dict,
+    ):
+        """
+        Update fields of an existing user.
+        """
+
         await self.collection.update_one(
-            {"_id": ObjectId(user_id)},
-            {"$set": update_data}
+            {
+                "_id": ObjectId(user_id),
+            },
+            {
+                "$set": update_data,
+            },
         )
 
-    async def delete_user(self, user_id: str):
+    # =========================================================
+    # Delete User
+    # =========================================================
+
+    async def delete_user(
+        self,
+        user_id: str,
+    ):
+        """
+        Delete a user by MongoDB ObjectId.
+        """
+
         await self.collection.delete_one(
-            {"_id": ObjectId(user_id)}
+            {
+                "_id": ObjectId(user_id),
+            }
         )

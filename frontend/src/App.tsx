@@ -18,6 +18,7 @@ import InterviewPage from "./pages/Interview/InterviewPage";
 import InterviewReportPage from "./pages/Interview/InterviewReportPage";
 import InterviewHistoryPage from "./pages/Interview/InterviewHistoryPage";
 import ApplicationsPage from "./pages/applications/ApplicationsPage";
+import OAuthCallbackPage from "./pages/Auth/OAuthCallbackPage";
 
 
 function App() {
@@ -30,8 +31,55 @@ function App() {
 }, [isDarkMode]);
 
   const handleNavigate = (tab: string) => {
-    navigate(tab);
-  };
+  switch (tab) {
+    case "landing":
+      navigate("/");
+      break;
+
+    case "auth":
+      navigate("/auth");
+      break;
+
+    case "dashboard":
+      navigate("/dashboard");
+      break;
+
+    case "profile":
+      navigate("/profile");
+      break;
+
+    case "settings":
+      navigate("/settings");
+      break;
+
+    case "resumes":
+      navigate("/resume");
+      break;
+
+    case "resume-details":
+      navigate("/resume-analysis");
+      break;
+
+    case "job-details":
+      navigate("/jobs");
+      break;
+
+    case "applications":
+      navigate("/applications");
+      break;
+
+    case "mock-interview":
+      navigate("/interview");
+      break;
+
+    case "interview-report":
+      navigate("/interview/history");
+      break;
+
+    default:
+      console.warn(`Unknown navigation tab: ${tab}`);
+  }
+};
 
   const handleToggleDarkMode = () => {
     setIsDarkMode((prev) => !prev);
@@ -49,6 +97,14 @@ function App() {
           />
         }
       />
+
+      <Route
+
+  path="/oauth/callback"
+
+  element={<OAuthCallbackPage />}
+
+/>
 
       <Route
         path="/auth"

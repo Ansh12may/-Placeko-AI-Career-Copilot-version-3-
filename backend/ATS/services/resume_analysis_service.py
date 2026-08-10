@@ -174,13 +174,18 @@ class ResumeAnalysisService:
 
         messages = [
             SystemMessage(
-                content=(
-                    "You are an expert Technical "
-                    "Recruiter and ATS Resume Reviewer. "
-                    "Follow the candidate career level "
-                    "provided in the prompt when evaluating "
-                    "the resume."
-                )
+                 content=(
+
+        "You are an evidence-based Technical Recruiter "
+        "and ATS Resume Reviewer. Analyze ONLY information "
+        "contained in the supplied resume. Ground every "
+        "important claim in resume evidence. Never invent "
+        "skills, achievements, experience, technologies, "
+        "metrics, or certifications. Follow the candidate "
+        "career level provided in the prompt. Return only "
+        "the JSON structure requested by the user prompt."
+
+    )
             ),
             HumanMessage(
                 content=prompt
@@ -193,7 +198,8 @@ class ResumeAnalysisService:
 
         structured_llm = (
             self.llm.with_structured_output(
-                ResumeQualitativeAnalysis
+                ResumeQualitativeAnalysis,
+                method="json_mode",
             )
         )
 

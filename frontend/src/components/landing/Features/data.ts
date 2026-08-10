@@ -31,8 +31,8 @@ export const features: Feature[] = [
 
   {
     icon: BarChart3,
-    title: "Career Dashboard",
+    title: "Application Dashboard",
     description:
-      "Track applications, monitor progress and receive personalized learning roadmaps.",
+      "Track applications, monitor progress in Kanban stlye dashboard.",
   },
 ];

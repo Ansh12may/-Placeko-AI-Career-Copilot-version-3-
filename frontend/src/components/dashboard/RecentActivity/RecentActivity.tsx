@@ -1,9 +1,21 @@
 import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import ActivityCard from "./ActivityCard";
-import { activities } from "./data";
+import type { Activity } from "./types";
 
-const RecentActivity = () => {
+interface RecentActivityProps {
+  activities: Activity[];
+}
+
+const RecentActivity = ({
+  activities=[],
+}: RecentActivityProps) => {
+  const navigate = useNavigate();
+
+  const displayedActivities =
+    activities.slice(0, 5);
+
   return (
     <section className="mt-8">
 
@@ -24,6 +36,8 @@ const RecentActivity = () => {
         </div>
 
         <button
+          type="button"
+          onClick={() => navigate("/applications")}
           className="
             flex
             items-center
@@ -36,9 +50,7 @@ const RecentActivity = () => {
           "
         >
           View All
-
           <ArrowRight size={16} />
-
         </button>
 
       </div>
@@ -56,18 +68,47 @@ const RecentActivity = () => {
           dark:bg-slate-900
         "
       >
-        {activities.map((activity, index) => (
-          <div
-            key={activity.id}
-            className={
-              index !== activities.length - 1
-                ? "border-b border-slate-200 dark:border-slate-800"
-                : ""
-            }
-          >
-            <ActivityCard activity={activity} />
+
+        {displayedActivities.length === 0 ? (
+
+          <div className="p-8 text-center">
+
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              No recent activity
+            </p>
+
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+              Your resume, applications, and interviews will appear here.
+            </p>
+
           </div>
-        ))}
+
+        ) : (
+
+          displayedActivities.map(
+            (activity, index) => (
+
+              <div
+                key={activity.id}
+                className={
+                  index !==
+                  displayedActivities.length - 1
+                    ? "border-b border-slate-200 dark:border-slate-800"
+                    : ""
+                }
+              >
+
+                <ActivityCard
+                  activity={activity}
+                />
+
+              </div>
+
+            )
+          )
+
+        )}
+
       </div>
 
     </section>

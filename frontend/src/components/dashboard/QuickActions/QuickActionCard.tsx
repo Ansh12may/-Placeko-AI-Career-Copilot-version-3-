@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import type { QuickAction } from "./types";
 
@@ -6,11 +7,22 @@ interface QuickActionCardProps {
   action: QuickAction;
 }
 
-const QuickActionCard = ({ action }: QuickActionCardProps) => {
+const QuickActionCard = ({
+  action,
+}: QuickActionCardProps) => {
+  const navigate = useNavigate();
+
+  if (!action) {
+    console.error("QuickActionCard: action is undefined");
+    return null;
+  }
+
   const Icon = action.icon;
 
   return (
     <button
+      type="button"
+      onClick={() => navigate(action.route)}
       className="
         group
         flex
@@ -27,13 +39,13 @@ const QuickActionCard = ({ action }: QuickActionCardProps) => {
         transition-all
         duration-300
         hover:-translate-y-1
+        hover:border-indigo-200
         hover:shadow-lg
         dark:border-slate-800
         dark:bg-slate-900
+        dark:hover:border-indigo-800
       "
     >
-      {/* Left */}
-
       <div className="flex items-center gap-4">
 
         <div
@@ -42,10 +54,14 @@ const QuickActionCard = ({ action }: QuickActionCardProps) => {
             flex
             h-14
             w-14
+            shrink-0
             items-center
             justify-center
             rounded-xl
             shadow-md
+            transition-transform
+            duration-300
+            group-hover:scale-105
           `}
         >
           <Icon
@@ -66,18 +82,17 @@ const QuickActionCard = ({ action }: QuickActionCardProps) => {
 
       </div>
 
-      {/* Right */}
-
       <ArrowRight
         size={22}
         className="
+          shrink-0
           text-slate-400
           transition-transform
           duration-300
           group-hover:translate-x-1
+          group-hover:text-indigo-600
         "
       />
-
     </button>
   );
 };
