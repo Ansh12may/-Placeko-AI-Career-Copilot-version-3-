@@ -33,6 +33,7 @@ torch==2.13.0
 sentence-transformers==5.6.1
 faster-whisper==1.2.1
 pinecone==9.1.0
+python-multipart==0.0.20
 
 pydantic==2.11.7
 httpx==0.28.1
