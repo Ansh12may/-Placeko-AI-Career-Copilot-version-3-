@@ -14,25 +14,22 @@ import tempfile
 from faster_whisper import WhisperModel
 
 class VoiceService:
-    """
-    Handles audio transcription and basic voice analysis.
-    """
+
     def __init__(self):
 
-        # -----------------------------------------------------
-        # Load Whisper model
-        # -----------------------------------------------------
+        self.model = None
 
-        self.model = WhisperModel(
-            "base",
-            device="cpu",
-            compute_type="int8",
-        )
+    def _get_model(self):
+        if self.model is None:
+            self.model = WhisperModel(
+                "base",
+                device="cpu",
+                compute_type="int8",
 
-    # =========================================================
+            )
+
+        return self.model
     # PROCESS AUDIO
-    # =========================================================
-
     async def process_audio(
         self,
         audio_bytes: bytes,
@@ -53,10 +50,8 @@ class VoiceService:
                 "Audio file is empty."
             )
 
-        # -----------------------------------------------------
+        
         # Create temporary audio file
-        # -----------------------------------------------------
-
         suffix = os.path.splitext(
             filename
         )[1] or ".webm"
@@ -76,11 +71,9 @@ class VoiceService:
 
                 temp_path = temp_file.name
 
-            # -------------------------------------------------
             # Transcribe
-            # -------------------------------------------------
-
-            segments, info = self.model.transcribe(
+            model = self._get_model()
+            segments, info = model.transcribe(
                 temp_path,
                 beam_size=5,
             )
@@ -93,26 +86,18 @@ class VoiceService:
                 if segment.text.strip()
             ).strip()
 
-            # -------------------------------------------------
+          
             # Audio duration
-            # -------------------------------------------------
 
             audio_duration = float(
                 info.duration
             )
-
-            # -------------------------------------------------
             # Word count
-            # -------------------------------------------------
-
             word_count = len(
                 transcript.split()
             )
 
-            # -------------------------------------------------
             # Speech rate
-            # -------------------------------------------------
-
             speech_rate = 0.0
 
             if audio_duration > 0:
@@ -136,10 +121,8 @@ class VoiceService:
 
         finally:
 
-            # -------------------------------------------------
             # Remove temporary file
-            # -------------------------------------------------
-
+           
             if (
                 temp_path
                 and os.path.exists(temp_path)

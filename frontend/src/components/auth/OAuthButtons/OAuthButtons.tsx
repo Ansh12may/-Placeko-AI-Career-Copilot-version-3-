@@ -1,4 +1,3 @@
-import { FaGithub} from "react-icons/fa";
 
 interface OAuthButtonsProps {
   onGoogle: () => void;
@@ -7,7 +6,7 @@ interface OAuthButtonsProps {
 
 const OAuthButtons = ({
   onGoogle,
-  onGithub,
+  
 }: OAuthButtonsProps) => {
   return (
     <div className="space-y-3">

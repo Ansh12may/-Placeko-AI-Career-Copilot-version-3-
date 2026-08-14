@@ -24,9 +24,20 @@ from sentence_transformers import CrossEncoder
 class RerankerTool:
 
     def __init__(self):
-        self.model = CrossEncoder(
-            "cross-encoder/ms-marco-MiniLM-L-6-v2"
-        )
+        # Do NOT load the model during application startup.
+        self.model = None
+
+    def _get_model(self):
+        """
+        Lazily load the CrossEncoder model only when
+        reranking is actually required.
+        """
+        if self.model is None:
+            self.model = CrossEncoder(
+                "cross-encoder/ms-marco-MiniLM-L-6-v2"
+            )
+
+        return self.model
 
     def score(
         self,
@@ -43,7 +54,9 @@ class RerankerTool:
         ):
             return 0.0
 
-        score = self.model.predict(
+        model = self._get_model()
+
+        score = model.predict(
             [(resume_text, job_text)]
         )
 
@@ -69,7 +82,9 @@ class RerankerTool:
             for job_text in job_texts
         ]
 
-        scores = self.model.predict(pairs)
+        model = self._get_model()
+
+        scores = model.predict(pairs)
 
         return [
             float(score)
