@@ -8,7 +8,7 @@ import JobRecommendations from "../../components/dashboard/JobRecommendations";
 import RecentActivity from "../../components/dashboard/RecentActivity";
 
 import { getCurrentUser } from "../../api/auth";
-import { getResumes } from "../../api/resume";
+import { getResumes,getResumeById, } from "../../api/resume";
 import { getApplications } from "../../api/application";
 import {
   getRecommendedJobs,
@@ -16,7 +16,7 @@ import {
 } from "../../api/job";
 
 import type { User } from "../../api/auth";
-import type { ResumeLibraryItem } from "../../types/resume";
+import type { ResumeLibraryItem,ResumeDetail } from "../../types/resume";
 import type { Application } from "../../types/application";
 
 import { getInterviewHistory } from "../../api/interview";
@@ -41,6 +41,9 @@ const DashboardPage = () => {
 
   const [activeResume, setActiveResume] =
     useState<ResumeLibraryItem | null>(null);
+
+  const [activeResumeDetail, setActiveResumeDetail] =
+  useState<ResumeDetail | null>(null);
 
   const [applications, setApplications] =
     useState<Application[]>([]);
@@ -108,11 +111,22 @@ const DashboardPage = () => {
         // -----------------------------------------------------
 
         const activeResume =
-          resumeResponse.data.find(
-            (resume) => resume.is_active
-          ) ?? null;
+  resumeResponse.data.find(
+    (resume) => resume.is_active
+  ) ?? null;
 
-        setActiveResume(activeResume);
+setActiveResume(activeResume);
+
+if (activeResume) {
+  const resumeDetailResponse =
+    await getResumeById(activeResume.id);
+
+  setActiveResumeDetail(
+    resumeDetailResponse.data
+  );
+} else {
+  setActiveResumeDetail(null);
+}
 
 
         // -----------------------------------------------------
@@ -200,10 +214,10 @@ const DashboardPage = () => {
   // =========================================================
 
   const improvementAreas =
-    activeResume
+    activeResumeDetail
       ? new Set([
-          ...activeResume.ats_report.weaknesses,
-          ...activeResume.ats_report.missing_keywords,
+          ...activeResumeDetail.ats_report.weaknesses,
+          ...activeResumeDetail.ats_report.missing_keywords,
         ]).size
       : 0;
 
@@ -226,9 +240,24 @@ const DashboardPage = () => {
             title: "Resume analyzed",
 
             description:
-              `Your resume received an ATS score of ${Math.round(
-                activeResume.ats_report.overall_score
-              )}.`,
+
+  `Your resume received an ATS score of ${
+
+    activeResumeDetail
+
+      ? Math.round(
+
+          activeResumeDetail.ats_report.overall_score
+
+        )
+
+      : activeResume.ats_score !== null
+
+        ? Math.round(activeResume.ats_score)
+
+        : "N/A"
+
+  }.`,
 
             time:
               formatRelativeTime(
@@ -258,10 +287,11 @@ const DashboardPage = () => {
       .map(
         (interview, index) => {
 
-          const timestamp =
-            new Date(
-              interview.started_at
-            ).getTime();
+         const timestamp = interview.started_at
+
+  ? new Date(interview.started_at).getTime()
+
+  : 0;
 
           return {
             id: 100 + index,
@@ -277,10 +307,12 @@ const DashboardPage = () => {
                 : "Your AI mock interview was completed.",
 
             time:
-              formatRelativeTime(
-                interview.started_at
-              ),
 
+  interview.started_at
+
+    ? formatRelativeTime(interview.started_at)
+
+    : "Recently",
             type: "interview" as const,
 
             timestamp,
@@ -430,9 +462,11 @@ const DashboardPage = () => {
 
       <StatsGrid
         resumeScore={
-          activeResume?.ats_report.overall_score ??
-          null
-        }
+      activeResumeDetail?.ats_report.overall_score ??
+      activeResume?.ats_score ??
+      null
+
+}
 
         jobMatches={
           jobMatches

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   FileText,
-  Upload,
   Eye,
   Loader2,
   AlertCircle,
@@ -35,10 +34,7 @@ const ResumeLibraryPage = () => {
   const [deletingId, setDeletingId] =
     useState<string | null>(null);
 
-
-  // =========================================================
   // Load Resumes
-  // =========================================================
 
   const loadResumes = async () => {
     try {
@@ -70,19 +66,14 @@ const ResumeLibraryPage = () => {
     }
   };
 
-
-  // =========================================================
   // Initial Load
-  // =========================================================
-
+  
   useEffect(() => {
     loadResumes();
   }, []);
 
-
-  // =========================================================
   // Format Date
-  // =========================================================
+
 
   const formatDate = (
     date: string
@@ -101,9 +92,9 @@ const ResumeLibraryPage = () => {
   };
 
 
-  // =========================================================
+
   // Open Resume
-  // =========================================================
+ 
 
   const handleOpenResume = (
     resumeId: string
@@ -119,9 +110,9 @@ const ResumeLibraryPage = () => {
   };
 
 
-  // =========================================================
+
   // Delete Resume
-  // =========================================================
+
 
   const handleDeleteResume = async (
     resume: ResumeLibraryItem
@@ -155,9 +146,9 @@ const ResumeLibraryPage = () => {
       );
 
 
-      // -----------------------------------------------------
+     
       // Remove from UI immediately
-      // -----------------------------------------------------
+  
 
       setResumes(
         (currentResumes) =>
@@ -189,9 +180,9 @@ const ResumeLibraryPage = () => {
   };
 
 
-  // =========================================================
+  
   // Loading
-  // =========================================================
+  
 
   if (loading) {
 
@@ -216,9 +207,9 @@ const ResumeLibraryPage = () => {
   return (
     <div className="min-h-full bg-slate-50 p-6 dark:bg-slate-950">
 
-      {/* =====================================================
+      {/*
           Header
-          ===================================================== */}
+          */}
 
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
@@ -240,9 +231,9 @@ const ResumeLibraryPage = () => {
       </div>
 
 
-      {/* =====================================================
+      {/*
           Error
-          ===================================================== */}
+       */}
 
       {error && (
 

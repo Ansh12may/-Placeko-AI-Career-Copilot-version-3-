@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import InterviewSetupPage from "./InterviewSetupPage";
-import InterviewPage from "./InterviewPage";
-import InterviewReportPage from "./InterviewReportPage";
+
 
 
 import {

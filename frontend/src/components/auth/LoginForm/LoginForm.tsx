@@ -5,6 +5,7 @@ import OAuthButtons from "../OAuthButtons";
 import { useAuth } from "../../../context/AuthContext";
 
 
+
 interface LoginFormProps {
   onLogin?: (email: string, password: string) => void;
   onGoogle?: () => void;
@@ -189,6 +190,13 @@ const { login } = useAuth();
           </button>
 
         </div>
+
+        {/* Login Error */}
+        {loginError && (
+          <p className="text-sm font-medium text-red-500">
+            {loginError}
+          </p>
+        )}
 
         {/* Remember / Forgot */}
 

@@ -5,7 +5,6 @@ import {
   ClipboardList,
   Mic,
   History,
-  GraduationCap,
   User,
   Settings,
   Sparkles,
