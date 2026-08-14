@@ -1,7 +1,11 @@
 from dotenv import load_dotenv
 import os
+from pathlib import Path
 from langchain_groq import ChatGroq
-load_dotenv()
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+load_dotenv(BASE_DIR / ".env")
+# load_dotenv()
 class Settings:
     RAPID_API_KEY = os.getenv("RAPID_API_KEY")      
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
