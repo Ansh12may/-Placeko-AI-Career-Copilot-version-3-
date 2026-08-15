@@ -17,6 +17,7 @@ It does NOT perform:
 """
 
 from typing import List
+import asyncio
 
 from backend.Jobs.schemas.job import Job
 
@@ -147,9 +148,10 @@ class JobService:
         # 6. Execute recommendation graph
         # =====================================================
 
-        result = self.graph.invoke(
-            initial_state
-        )
+        result = await asyncio.to_thread(
+        self.graph.invoke,
+        initial_state,
+)
 
         # =====================================================
         # 7. Get ranked recommendations

@@ -69,87 +69,73 @@ const DashboardPage = () => {
   // =========================================================
 
   useEffect(() => {
-    const loadDashboardData = async () => {
+  const loadDashboardData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const [
+        currentUser,
+        resumeResponse,
+        applicationData,
+        interviewHistory,
+      ] = await Promise.all([
+        getCurrentUser(),
+        getResumes(),
+        getApplications(),
+        getInterviewHistory(),
+      ]);
+
+      // -----------------------------------------------------
+      // Critical dashboard data
+      // -----------------------------------------------------
+
+      setUser(currentUser);
+      setApplications(applicationData);
+      setInterviews(interviewHistory);
+
+      const activeResume =
+        resumeResponse.data.find(
+          (resume) => resume.is_active
+        ) ?? null;
+
+      setActiveResume(activeResume);
+
+      // -----------------------------------------------------
+      // Dashboard can now render
+      // -----------------------------------------------------
+
+      setIsLoading(false);
+
+      // -----------------------------------------------------
+      // Load resume details separately
+      // -----------------------------------------------------
+
+      if (activeResume) {
+        try {
+          const resumeDetailResponse =
+            await getResumeById(activeResume.id);
+
+          setActiveResumeDetail(
+            resumeDetailResponse.data
+          );
+        } catch (error) {
+          console.error(
+            "Dashboard: failed to load resume details:",
+            error
+          );
+        }
+      } else {
+        setActiveResumeDetail(null);
+      }
+
+      // -----------------------------------------------------
+      // Load recommendations separately
+      // -----------------------------------------------------
+
       try {
-        setIsLoading(true);
-        setError(null);
-
-        // -----------------------------------------------------
-        // Load all dashboard data in parallel
-        // -----------------------------------------------------
-
-        const [
-  currentUser,
-  resumeResponse,
-  applicationData,
-  recommendedJobData,
-  interviewHistory,
-] = await Promise.all([
-  getCurrentUser(),
-  getResumes(),
-  getApplications(),
-  getRecommendedJobs().catch((error) => {
-    console.error(
-      "Dashboard: failed to load recommended jobs:",
-      error
-    );
-
-    return [];
-  }),
-  getInterviewHistory(),
-]);
-
-        // -----------------------------------------------------
-        // User
-        // -----------------------------------------------------
-
-        setUser(currentUser);
-
-
-        // -----------------------------------------------------
-        // Active Resume
-        // -----------------------------------------------------
-
-        const activeResume =
-  resumeResponse.data.find(
-    (resume) => resume.is_active
-  ) ?? null;
-
-setActiveResume(activeResume);
-
-if (activeResume) {
-  const resumeDetailResponse =
-    await getResumeById(activeResume.id);
-
-  setActiveResumeDetail(
-    resumeDetailResponse.data
-  );
-} else {
-  setActiveResumeDetail(null);
-}
-
-
-        // -----------------------------------------------------
-        // Applications
-        // -----------------------------------------------------
-
-        setApplications(
-          applicationData
-        );
-
-
-        // -----------------------------------------------------
-        // Interviews
-        // -----------------------------------------------------
-
-        setInterviews(
-          interviewHistory
-        );
-
-
-        // -----------------------------------------------------
-        // Recommended Jobs
-        // -----------------------------------------------------
+        const recommendedJobData =
+          await getRecommendedJobs();
 
         setRecommendedJobs(
           recommendedJobData
@@ -158,28 +144,33 @@ if (activeResume) {
         setJobMatches(
           recommendedJobData.length
         );
-
       } catch (error) {
-
         console.error(
-          "Dashboard: failed to load data:",
+          "Dashboard: failed to load recommended jobs:",
           error
         );
 
-        setError(
-          "Unable to load your dashboard data."
-        );
-
-      } finally {
-
-        setIsLoading(false);
-
+        setRecommendedJobs([]);
+        setJobMatches(0);
       }
-    };
 
-    loadDashboardData();
-  }, []);
+    } catch (error) {
 
+      console.error(
+        "Dashboard: failed to load critical data:",
+        error
+      );
+
+      setError(
+        "Unable to load your dashboard data."
+      );
+
+      setIsLoading(false);
+    }
+  };
+
+  loadDashboardData();
+}, []);
 
   // =========================================================
   // Interview Readiness
