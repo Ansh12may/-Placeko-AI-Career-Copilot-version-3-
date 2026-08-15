@@ -19,7 +19,8 @@ class EmbeddingTool:
     def _get_model(self) -> SentenceTransformer:
         if self.model is None:
             self.model = SentenceTransformer(
-                "BAAI/bge-small-en-v1.5"
+                "BAAI/bge-small-en-v1.5",
+                device="cpu",
             )
 
         return self.model
