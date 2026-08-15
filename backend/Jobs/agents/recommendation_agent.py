@@ -4,7 +4,7 @@ Recommendation Agent
 Responsible for orchestrating the semantic job
 recommendation pipeline.
 
-Pipeline:
+Production Pipeline:
 
 CandidateProfile
         ↓
@@ -12,11 +12,11 @@ Semantic Retrieval
         ↓
 Pinecone
         ↓
-Top-N Jobs
-        ↓
-CrossEncoder Reranking
-        ↓
 Top-K Recommended Jobs
+
+CrossEncoder reranking is implemented separately
+but is not used in the current production pipeline
+due to deployment memory constraints.
 
 This agent performs NO:
 - LLM reasoning
@@ -35,10 +35,6 @@ from backend.Jobs.services.vector_service import (
     VectorService,
 )
 
-from backend.Jobs.services.reranker_service import (
-    RerankerService,
-)
-
 
 class RecommendationAgent:
 
@@ -48,16 +44,13 @@ class RecommendationAgent:
             VectorService()
         )
 
-        self.reranker_service = (
-            RerankerService()
-        )
-
     def run(
         self,
         state: GraphState,
     ) -> GraphState:
         """
-        Execute the semantic recommendation pipeline.
+        Execute the production semantic recommendation
+        pipeline.
 
         Flow:
 
@@ -68,10 +61,6 @@ class RecommendationAgent:
         VectorService
             ↓
         Semantic Retrieval
-            ↓
-        Top-N Jobs
-            ↓
-        RerankerService
             ↓
         Top-K Jobs
             ↓
@@ -95,29 +84,17 @@ class RecommendationAgent:
         # 2. Semantic Retrieval
         # =====================================================
 
-        retrieved_jobs = (
+        recommended_jobs = (
             self.vector_service.search_by_candidate(
                 candidate_profile=profile,
-                top_k=20,
-            )
-        )
-
-        # =====================================================
-        # 3. CrossEncoder Reranking
-        # =====================================================
-
-        reranked_jobs = (
-            self.reranker_service.rerank(
-                candidate_profile=profile,
-                jobs=retrieved_jobs,
                 top_k=5,
             )
         )
 
         # =====================================================
-        # 4. Update GraphState
+        # 3. Update GraphState
         # =====================================================
 
-        state["ranked_jobs"] = reranked_jobs
+        state["ranked_jobs"] = recommended_jobs
 
         return state
