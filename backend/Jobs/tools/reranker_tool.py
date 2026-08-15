@@ -4,19 +4,11 @@ Cross Encoder Reranker Tool
 Responsible for computing semantic relevance scores
 between a candidate resume and job descriptions.
 
-Responsibilities:
-- Load CrossEncoder model
-- Score resume/job pairs
-- Return relevance scores
-
-This tool performs NO:
-- Sorting
-- Filtering
-- Top-K selection
-- Business logic
+The CrossEncoder model is loaded lazily so that
+application startup does not load the ML model.
 """
 
-from typing import List
+from typing import List, Optional
 
 from sentence_transformers import CrossEncoder
 
@@ -24,14 +16,10 @@ from sentence_transformers import CrossEncoder
 class RerankerTool:
 
     def __init__(self):
-        # Do NOT load the model during application startup.
-        self.model = None
+        self.model: Optional[CrossEncoder] = None
 
-    def _get_model(self):
-        """
-        Lazily load the CrossEncoder model only when
-        reranking is actually required.
-        """
+    def _get_model(self) -> CrossEncoder:
+
         if self.model is None:
             self.model = CrossEncoder(
                 "cross-encoder/ms-marco-MiniLM-L-6-v2"
@@ -44,9 +32,6 @@ class RerankerTool:
         resume_text: str,
         job_text: str,
     ) -> float:
-        """
-        Calculate relevance score for one resume/job pair.
-        """
 
         if (
             not resume_text.strip()
@@ -67,9 +52,6 @@ class RerankerTool:
         resume_text: str,
         job_texts: List[str],
     ) -> List[float]:
-        """
-        Calculate relevance scores for multiple jobs.
-        """
 
         if not resume_text.strip():
             return [0.0] * len(job_texts)

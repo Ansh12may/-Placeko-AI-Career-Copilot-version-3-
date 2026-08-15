@@ -1,29 +1,22 @@
 """
 Embedding Tool
-Responsible for generating vector embeddings
-using the configured embedding model.
-This tool performs NO ranking or AI reasoning.
 
-Responsibilities:
-- Generate embedding vector
-- Return embedding vector
+Responsible for generating vector embeddings.
+The model is loaded lazily so application startup
+does not download/load the ML model.
 """
 
-from typing import List
+from typing import List, Optional
+
 from sentence_transformers import SentenceTransformer
 
 
 class EmbeddingTool:
 
     def __init__(self):
-        # Do NOT load the model during application startup.
-        self.model = None
+        self.model: Optional[SentenceTransformer] = None
 
-    def _get_model(self):
-        """
-        Lazily load the embedding model only when
-        an embedding is actually required.
-        """
+    def _get_model(self) -> SentenceTransformer:
         if self.model is None:
             self.model = SentenceTransformer(
                 "BAAI/bge-small-en-v1.5"
@@ -31,7 +24,10 @@ class EmbeddingTool:
 
         return self.model
 
-    def get_embedding(self, text: str) -> List[float]:
+    def get_embedding(
+        self,
+        text: str,
+    ) -> List[float]:
 
         if not text.strip():
             return []
@@ -40,7 +36,7 @@ class EmbeddingTool:
 
         embedding = model.encode(
             text,
-            normalize_embeddings=True
+            normalize_embeddings=True,
         )
 
         return embedding.tolist()
