@@ -72,9 +72,9 @@ This creates a **context-aware career intelligence system** rather than a collec
 
 ---
 
-# ✨ AI Capabilities
+#  AI Capabilities
 
-## 1. 📄 Resume Intelligence
+## 1.  Resume Intelligence
 
 The resume is converted from an unstructured document into structured candidate information.
 
@@ -106,7 +106,7 @@ This structured representation becomes context for other AI workflows.
 
 ---
 
-# 2. 🔍 Semantic Job Matching
+# 2.  Semantic Job Matching
 
 Placeko uses **embedding-based semantic matching** instead of relying only on keyword overlap.
 
@@ -142,7 +142,7 @@ A semantic representation can recognize the relationship between these concepts 
 
 ---
 
-# 3. 🤖 AI Mock Interview Engine
+# 3.  AI Mock Interview Engine
 
 Placeko contains an interview workflow designed around **personalized question generation rather than static question banks**.
 
@@ -182,7 +182,7 @@ Interview Report
 
 ---
 
-# 4. 🧩 Interview Planning
+# 4.  Interview Planning
 
 The interview module separates **interview orchestration** from **question generation**.
 
@@ -213,7 +213,7 @@ This makes the interview workflow deterministic at the orchestration layer while
 
 ---
 
-# 5. 🧠 Context-Aware Question Generation
+# 5.  Context-Aware Question Generation
 
 Questions are generated dynamically from candidate and job context.
 
@@ -253,7 +253,7 @@ Next Best Question
 
 ---
 
-# 6. 🎯 Structured AI Outputs
+# 6.  Structured AI Outputs
 
 LLM responses are not treated as arbitrary strings wherever structured application data is required.
 
@@ -283,7 +283,7 @@ This provides:
 
 ---
 
-# 7. 🗣️ AI Answer Evaluation
+# 7.  AI Answer Evaluation
 
 Interview answers are evaluated in context rather than as isolated text.
 
@@ -311,7 +311,7 @@ The result is represented using structured interview feedback.
 
 ---
 
-# 8. 🎤 Multimodal Interview Input
+# 8.  Multimodal Interview Input
 
 Placeko supports voice-based interview answers in addition to text answers.
 
@@ -337,7 +337,7 @@ This creates a foundation for multimodal interview experiences where the candida
 
 ---
 
-# 9. 📊 AI Interview Reports
+# 9.  AI Interview Reports
 
 Interview sessions can be transformed into structured performance information.
 
@@ -354,7 +354,7 @@ This allows the interview system to move beyond question generation toward **can
 
 ---
 
-# 10. 📋 AI → Application Workflow
+# 10.  AI → Application Workflow
 
 Placeko connects AI-driven career workflows with a deterministic application management system.
 
@@ -392,7 +392,7 @@ The application state is persisted in MongoDB.
 
 ---
 
-# 🏗️ AI-Native Architecture
+#  AI-Native Architecture
 
 The architecture separates **AI reasoning** from deterministic application infrastructure.
 
@@ -439,7 +439,7 @@ The architecture separates **AI reasoning** from deterministic application infra
 
 ---
 
-# 🧠 AI vs Deterministic Logic
+#  AI vs Deterministic Logic
 
 A key architectural principle is:
 
@@ -476,7 +476,7 @@ This reduces the impact of LLM unpredictability on critical application state.
 
 ---
 
-# 🔄 AI Pipeline Design
+#  AI Pipeline Design
 
 A typical AI workflow follows:
 
@@ -502,7 +502,7 @@ The model is therefore one component inside a larger pipeline rather than the en
 
 ---
 
-# 🧱 Backend Architecture
+#  Backend Architecture
 
 Placeko uses a modular service-oriented backend.
 
@@ -547,7 +547,7 @@ This prevents AI logic, business logic, and persistence logic from being tightly
 
 ---
 
-# 📦 Application Module
+#  Application Module
 
 The application tracker follows:
 
@@ -581,7 +581,7 @@ PATCH /api/applications/{id}/status
 
 ---
 
-# 🗄️ Persistence
+#  Persistence
 
 MongoDB stores persistent application state.
 
@@ -601,7 +601,7 @@ The service does not need to know whether the underlying storage is in-memory or
 
 ---
 
-# 🔐 Authentication Architecture
+#  Authentication Architecture
 
 Placeko uses JWT-based authentication for protected workflows.
 
@@ -627,7 +627,7 @@ User-scoped resources are queried using the authenticated user's identity.
 
 ---
 
-# 🧰 Technology Stack
+#  Technology Stack
 
 ## AI / ML
 
@@ -672,7 +672,7 @@ User-scoped resources are queried using the authenticated user's identity.
 
 ---
 
-# 🧪 Reliability Strategy
+#  Reliability Strategy
 
 Generative AI introduces uncertainty.
 
@@ -702,7 +702,7 @@ This is particularly important for workflows such as:
 
 ---
 
-# 🎯 Engineering Challenges
+#  Engineering Challenges
 
 ## Context-Aware AI
 
@@ -802,7 +802,7 @@ The backend therefore owns workflow state explicitly.
 
 ---
 
-# 📚 What This Project Demonstrates
+#  What This Project Demonstrates
 
 Placeko demonstrates practical implementation of:
 
@@ -827,7 +827,7 @@ Placeko demonstrates practical implementation of:
 
 ---
 
-# 🎯 Core Philosophy
+#  Core Philosophy
 
 > **AI should provide intelligence; the software architecture should provide control.**
 
@@ -853,7 +853,7 @@ AI Career Copilot
 
 ---
 
-# 👤 Author
+#  Author
 
 **Ashutosh Kushwaha**
 
@@ -862,6 +862,6 @@ Specialization: Artificial Intelligence & Machine Learning
 
 ---
 
-## ⭐ Placeko
+##  Placeko
 
 **AI Career Copilot — Resume Intelligence • Semantic Job Matching • Personalized Interviews • AI Evaluation • Application Intelligence**
