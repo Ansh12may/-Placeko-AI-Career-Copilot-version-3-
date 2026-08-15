@@ -50,45 +50,70 @@ class VectorService:
     ) -> None:
         """
         Convert jobs into embeddings and store them in Pinecone.
+
+        Embeddings are generated in batch to reduce repeated
+        model/API calls.
         """
 
         if not jobs:
             return
 
+        # -----------------------------------------------------
+        # 1. Convert jobs → searchable text
+        # -----------------------------------------------------
+
+        job_texts = [
+            job_to_text(job)
+            for job in jobs
+        ]
+
+        # -----------------------------------------------------
+        # 2. Generate embeddings
+        # -----------------------------------------------------
+
+        embeddings = self.embedding_tool.get_embeddings(
+            job_texts
+        )
+
+        if not embeddings:
+            return
+
+        # -----------------------------------------------------
+        # 3. Build Pinecone vectors
+        # -----------------------------------------------------
+
         vectors = []
 
-        for job in jobs:
-
-            # -------------------------------------------------
-            # Job → searchable semantic text
-            # -------------------------------------------------
-
-            text = job_to_text(job)
-
-            # -------------------------------------------------
-            # Generate embedding
-            # -------------------------------------------------
-
-            embedding = self.embedding_tool.get_embedding(
-                text
-            )
+        for job, embedding in zip(
+            jobs,
+            embeddings,
+        ):
 
             if not embedding:
                 continue
 
             # -------------------------------------------------
-            # Generate stable Pinecone vector ID
+            # Stable vector ID
             #
-            # Job schema currently has no unique ID, so we
-            # derive one from the job's identifying fields.
+            # Prefer the application URL because it normally
+            # identifies a specific job posting.
+            #
+            # Fall back to job fields when apply_url is absent.
             # -------------------------------------------------
 
-            vector_id = hashlib.sha256(
-                (
+            job_identity = (
+                str(job.apply_url)
+                if job.apply_url
+                else (
                     f"{job.title}|"
                     f"{job.company}|"
-                    f"{job.location}"
-                ).encode("utf-8")
+                    f"{job.location}|"
+                    f"{job.description}"
+                )
+            )
+
+            vector_id = hashlib.sha256(
+                job_identity.encode("utf-8")
             ).hexdigest()
 
             # -------------------------------------------------
@@ -104,13 +129,13 @@ class VectorService:
                             job.model_dump(
                                 mode="json"
                             )
-                        )
+                        ),
                     },
                 }
             )
 
         # -----------------------------------------------------
-        # Upsert vectors into Pinecone
+        # 4. Upsert into Pinecone
         # -----------------------------------------------------
 
         if vectors:
@@ -144,11 +169,13 @@ class VectorService:
               ↓
         Top-N Matches
               ↓
+        Deduplication
+              ↓
         Job objects
         """
 
         # -----------------------------------------------------
-        # Candidate → semantic text
+        # 1. Candidate → semantic text
         # -----------------------------------------------------
 
         resume_text = resume_to_text(
@@ -156,7 +183,7 @@ class VectorService:
         )
 
         # -----------------------------------------------------
-        # Candidate → embedding
+        # 2. Candidate → embedding
         # -----------------------------------------------------
 
         embedding = self.embedding_tool.get_embedding(
@@ -167,7 +194,7 @@ class VectorService:
             return []
 
         # -----------------------------------------------------
-        # Semantic vector search
+        # 3. Semantic vector search
         # -----------------------------------------------------
 
         matches = self.pinecone_tool.query_vectors(
@@ -177,10 +204,11 @@ class VectorService:
         )
 
         # -----------------------------------------------------
-        # Convert Pinecone matches → Job objects
+        # 4. Convert Pinecone matches → Job objects
         # -----------------------------------------------------
 
         jobs: List[Job] = []
+        seen_jobs = set()
 
         for match in matches:
 
@@ -200,11 +228,35 @@ class VectorService:
                     job_data
                 )
 
-                # Preserve first-stage semantic score.
+                # -------------------------------------------------
+                # Deduplicate job postings
                 #
-                # This is NOT a percentage.
-                # It is the similarity score returned
-                # by the vector database.
+                # Prefer apply_url as the job identity.
+                # Fall back to title/company/location.
+                # -------------------------------------------------
+
+                identity = (
+                    str(job.apply_url)
+                    if job.apply_url
+                    else (
+                        f"{job.title}|"
+                        f"{job.company}|"
+                        f"{job.location}"
+                    )
+                )
+
+                if identity in seen_jobs:
+                    continue
+
+                seen_jobs.add(identity)
+
+                # -------------------------------------------------
+                # Preserve semantic similarity score
+                #
+                # This is the similarity score returned by
+                # Pinecone. It is NOT a percentage.
+                # -------------------------------------------------
+
                 if hasattr(match, "score"):
                     job.match_score = match.score
 

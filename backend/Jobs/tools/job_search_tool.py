@@ -55,6 +55,7 @@ class JobSearchTool:
         our internal Job schema.
         """
         return Job(
+            job_id=item.get("job_id"),
             title=item.get("job_title", ""),
             company=item.get("employer_name", ""),
             location=item.get("job_location", ""),

@@ -5,6 +5,7 @@ class Job(BaseModel):
     """
     Represents a single job posting.
     """
+    job_id: Optional[str] = None
     title: str
     company: str
     location: str
