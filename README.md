@@ -30,7 +30,7 @@ Rather than building a generic chatbot, Placeko uses AI inside a structured soft
 
 ---
 
-# 🧠 Why Placeko?
+#  Why Placeko?
 
 Traditional career platforms usually treat each part of the job search independently:
 
