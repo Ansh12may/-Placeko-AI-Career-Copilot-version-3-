@@ -4,7 +4,21 @@
 
 Placeko is a full-stack **Generative AI application** built around a candidate's resume, target roles, interview preparation, and job-search workflow.
 
+##  Live Deployment
+
+**Frontend:**  
+
+https://placeko-ai-career-copilot-version-3-1.onrender.com
+
+**Backend API:**  
+
+https://placeko-ai-career-copilot-version-3.onrender.com
+
+> Placeko is deployed with a separate frontend and backend architecture, allowing the AI services and application API to be developed and deployed independently.
+
 The core idea is simple:
+
+
 
 ```text
 Resume
