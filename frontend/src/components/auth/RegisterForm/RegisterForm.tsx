@@ -1,13 +1,5 @@
 import { useState } from "react";
-import {
-  User,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  ArrowRight,
-} from "lucide-react";
-
+import {User,Mail,Lock,Eye,EyeOff,ArrowRight} from "lucide-react";
 import FormInput from "../FormInput";
 import OAuthButtons from "../OAuthButtons";
 import { useAuth } from "../../../context/AuthContext";

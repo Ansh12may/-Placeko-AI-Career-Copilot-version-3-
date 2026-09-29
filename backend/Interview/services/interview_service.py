@@ -21,6 +21,8 @@ domain services.
 It contains NO LLM reasoning.
 """
 
+import asyncio
+from uuid import uuid4
 from datetime import datetime
 from typing import Optional
 
@@ -65,21 +67,7 @@ from backend.Interview.schemas.question_answer_pair import (
     QuestionAnswerPair,
 )
 
-from backend.Interview.agents.interview_planner_agent import (
-    InterviewPlannerAgent,
-)
-
-from backend.Interview.agents.question_generator_agent import (
-    QuestionGeneratorAgent,
-)
-
-from backend.Interview.agents.answer_evaluation_agent import (
-    AnswerEvaluationAgent,
-)
-
-from backend.Interview.agents.interview_report_agent import (
-    InterviewReportAgent,
-)
+from backend.graphs.workflow import graph
 
 from backend.Interview.services.interview_flow_service import (
     InterviewFlowService,
@@ -101,39 +89,20 @@ class InterviewService:
     """
 
     def __init__(self):
-
         self.resume_repository = ResumeRepository()
-
-        self.planner_agent = InterviewPlannerAgent()
-
-        self.question_agent = QuestionGeneratorAgent()
-
-        self.evaluation_agent = AnswerEvaluationAgent()
-
-        self.report_agent = InterviewReportAgent()
-
         self.flow_service = InterviewFlowService()
-
         self.session_manager = InterviewSessionManager()
-
         self.voice_service = VoiceService()
 
-    # =========================================================
+    
     # START INTERVIEW
-    # =========================================================
-
-    async def start_interview(
-        self,
-        request: InterviewRequest,
-        user_id: str,
-    ) -> InterviewSession:
+   
+    async def start_interview(self,request: InterviewRequest,user_id: str) -> InterviewSession:
         """
         Create a new personalized interview session.
         """
 
-        # -----------------------------------------------------
         # 1. Load requested resume
-        # -----------------------------------------------------
 
         resume = (
             await self.resume_repository.get_resume_by_id(
@@ -146,11 +115,9 @@ class InterviewService:
             raise ValueError(
                 "Resume not found."
             )
-
-        # -----------------------------------------------------
+        
         # 2. Extract candidate profile
-        # -----------------------------------------------------
-
+      
         candidate_profile_data = resume.get(
             "candidate_profile"
         )
@@ -166,10 +133,9 @@ class InterviewService:
             )
         )
 
-        # -----------------------------------------------------
+        
         # 3. Convert interview configuration
-        # -----------------------------------------------------
-
+        
         interview_mode = InterviewMode(
             request.interview_type.value.capitalize()
         )
@@ -178,10 +144,8 @@ class InterviewService:
             request.difficulty.value.capitalize()
         )
 
-        # -----------------------------------------------------
         # 4. Build optional target job
-        # -----------------------------------------------------
-
+      
         job: Optional[Job] = None
 
         if request.job_description:
@@ -202,10 +166,8 @@ class InterviewService:
                 "Please provide job_description instead."
             )
 
-        # -----------------------------------------------------
         # 5. Generate Interview Plan
-        # -----------------------------------------------------
-
+        
         planner_state = {
             "candidate_profile": candidate_profile,
             "selected_job": job,
@@ -213,8 +175,12 @@ class InterviewService:
             "difficulty": difficulty,
         }
 
-        planner_state = self.planner_agent.run(
-            planner_state
+        planner_state["workflow_type"] = "interview_plan"
+
+        planner_state = await asyncio.to_thread(
+            graph.invoke,
+            planner_state,
+            {"configurable": {"thread_id": str(uuid4())}},
         )
 
         interview_plan = planner_state.get(
@@ -226,10 +192,9 @@ class InterviewService:
                 "Failed to generate interview plan."
             )
 
-        # -----------------------------------------------------
+        
         # 6. Normalize question count
-        # -----------------------------------------------------
-
+       
         interview_plan = self._normalize_question_count(
             plan=interview_plan,
             num_questions=request.num_questions,
@@ -238,9 +203,9 @@ class InterviewService:
             include_behavioral=request.include_behavioral,
         )
 
-        # -----------------------------------------------------
+       
         # 7. Create Interview Session
-        # -----------------------------------------------------
+        
 
         session = InterviewSession(
             user_id=user_id,
@@ -252,9 +217,9 @@ class InterviewService:
             started_at=datetime.utcnow(),
         )
 
-        # -----------------------------------------------------
+        
         # 8. Generate First Question
-        # -----------------------------------------------------
+        
 
         category = self.flow_service.next_category(
             session
@@ -269,8 +234,12 @@ class InterviewService:
             "previous_questions": [],
         }
 
-        question_state = self.question_agent.run(
-            question_state
+        question_state["workflow_type"] = "interview_next_question"
+
+        question_state = await asyncio.to_thread(
+            graph.invoke,
+            question_state,
+            {"configurable": {"thread_id": str(uuid4())}},
         )
 
         current_question = question_state.get(
@@ -290,9 +259,9 @@ class InterviewService:
 
         session.current_question_index = 0
 
-        # -----------------------------------------------------
+       
         # 9. Persist Session
-        # -----------------------------------------------------
+      
 
         await self.session_manager.create_session(
             session
@@ -300,9 +269,9 @@ class InterviewService:
 
         return session
 
-    # =========================================================
+  
     # NORMALIZE QUESTION COUNT
-    # =========================================================
+    
 
     def _normalize_question_count(
         self,
@@ -403,9 +372,9 @@ class InterviewService:
             }
         )
 
-    # =========================================================
+   
     # GET SESSION
-    # =========================================================
+   
 
     async def get_session(
         self,
@@ -422,9 +391,9 @@ class InterviewService:
             user_id=user_id,
         )
 
-    # =========================================================
+   
     # CURRENT QUESTION
-    # =========================================================
+   
 
     async def get_current_question(
         self,
@@ -449,11 +418,11 @@ class InterviewService:
             session.current_question_index
         ].question
 
-# =========================================================
+
 
 # INTERVIEW HISTORY
 
-# =========================================================
+
 
     async def get_interview_history(
 
@@ -477,9 +446,9 @@ class InterviewService:
 
         )
 
-    # =========================================================
+    
     # SUBMIT ANSWER
-    # =========================================================
+    
 
     async def submit_answer(
             self,
@@ -492,27 +461,27 @@ class InterviewService:
             and generate the next question if required.
             """
 
-        # -----------------------------------------------------
+      
         # 1. Retrieve Session
-        # -----------------------------------------------------
+     
 
             session = await self.get_session(
             session_id=session_id,
             user_id=user_id,
         )
 
-        # -----------------------------------------------------
+     
         # 2. Validate Interview Status
-        # -----------------------------------------------------
+   
 
             if session.status != InterviewStatus.IN_PROGRESS:
                 raise ValueError(
                 "Interview is not currently in progress."
             )
 
-        # -----------------------------------------------------
+       
         # 3. Validate Current Question
-        # -----------------------------------------------------
+      
 
             if not session.history:
                 raise ValueError(
@@ -528,9 +497,9 @@ class InterviewService:
                     "Answer does not belong to the current question."
                 )
 
-            # -----------------------------------------------------
+          
             # 4. Prevent Duplicate Answer
-            # -----------------------------------------------------
+           
 
             if pair.answer is not None:
                 raise ValueError(
@@ -547,9 +516,18 @@ class InterviewService:
             # 6. Evaluate Answer
             # -----------------------------------------------------
 
-            session = self.evaluation_agent.run(
-                session
+            evaluate_state = {
+                "interview_session": session,
+                "workflow_type": "interview_evaluate_answer",
+            }
+
+            evaluate_state = await asyncio.to_thread(
+                graph.invoke,
+                evaluate_state,
+                {"configurable": {"thread_id": str(uuid4())}},
             )
+
+            session = evaluate_state["interview_session"]
 
 
 
@@ -600,8 +578,12 @@ class InterviewService:
                 ],
             }
 
-            question_state = self.question_agent.run(
-                question_state
+            question_state["workflow_type"] = "interview_next_question"
+
+            question_state = await asyncio.to_thread(
+                graph.invoke,
+                question_state,
+                {"configurable": {"thread_id": str(uuid4())}},
             )
 
             next_question = question_state.get(
@@ -818,9 +800,18 @@ class InterviewService:
             # 3. Generate Report
             # -----------------------------------------------------
 
-            session = self.report_agent.run(
-                session
+            report_state = {
+                "interview_session": session,
+                "workflow_type": "interview_report",
+            }
+
+            report_state = await asyncio.to_thread(
+                graph.invoke,
+                report_state,
+                {"configurable": {"thread_id": str(uuid4())}},
             )
+
+            session = report_state["interview_session"]
 
             # -----------------------------------------------------
             # 4. Persist Updated Session + Report

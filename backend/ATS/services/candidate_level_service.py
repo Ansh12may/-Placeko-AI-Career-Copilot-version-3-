@@ -1,8 +1,7 @@
 """
 Candidate Level Service
-
 Responsible for determining the candidate's career level
-based on professional experience.
+based on professional experience with accurate interval merging for overlapping roles.
 
 Levels:
 
@@ -19,17 +18,13 @@ This service performs NO AI reasoning.
 
 import re
 from datetime import date
-
-from backend.ATS.schemas.candidate_level import (
-    CandidateLevel,
-)
+from typing import List, Tuple, Optional
+from backend.ATS.schemas.candidate_level import CandidateLevel
 
 
 class CandidateLevelService:
 
-    # =========================================================
     # Internship Detection
-    # =========================================================
 
     INTERNSHIP_KEYWORDS = [
         "intern",
@@ -38,15 +33,26 @@ class CandidateLevelService:
         "apprentice",
     ]
 
+    MONTH_MAP = {
+        "jan": 1, "january": 1,
+        "feb": 2, "february": 2,
+        "mar": 3, "march": 3,
+        "apr": 4, "april": 4,
+        "may": 5,
+        "jun": 6, "june": 6,
+        "jul": 7, "july": 7,
+        "aug": 8, "august": 8,
+        "sep": 9, "september": 9,
+        "oct": 10, "october": 10,
+        "nov": 11, "november": 11,
+        "dec": 12, "december": 12,
+    }
+
     @classmethod
-    def _is_internship(
-        cls,
-        role: str,
-    ) -> bool:
+    def _is_internship(cls, role: str) -> bool:
         """
         Determine whether a role is an internship/trainee role.
         """
-
         if not role:
             return False
 
@@ -57,256 +63,81 @@ class CandidateLevelService:
             for keyword in cls.INTERNSHIP_KEYWORDS
         )
 
-    # =========================================================
-    # Duration Parsing
-    # =========================================================
+    # Duration & Interval Parsing
 
-    @staticmethod
-    def _parse_duration(
-        duration: str,
-    ) -> float:
+    @classmethod
+    def _parse_to_interval(cls, duration: str) -> Tuple[Optional[Tuple[date, date]], float]:
         """
-        Convert common duration formats into years.
-
-        Supported examples:
-
-        6 months
-        1 year
-        1.5 years
-        2 years 6 months
-        2023 - 2025
-        2023 - Present
-        Jan 2023 - Jun 2025
-        January 2023 - June 2025
-
-        Returns:
-            Duration in years.
+        Parses duration text. 
+        Returns tuple of ((start_date, end_date), explicit_years_fallback).
         """
-
         if not duration:
-            return 0.0
+            return None, 0.0
 
         text = duration.lower().strip()
+        text = re.sub(r"[–—]", "-", text)
 
-        # Normalize different dash characters
-        text = re.sub(
-            r"[–—]",
-            "-",
-            text,
-        )
-
-        # =====================================================
-        # Explicit duration
-        # =====================================================
-
-        years = 0.0
-        months = 0.0
-
-        year_match = re.search(
-            r"(\d+(?:\.\d+)?)\s*"
-            r"(?:years?|yrs?)",
-            text,
-        )
-
-        month_match = re.search(
-            r"(\d+(?:\.\d+)?)\s*"
-            r"(?:months?|mos?)",
-            text,
-        )
-
-        if year_match:
-            years = float(
-                year_match.group(1)
-            )
-
-        if month_match:
-            months = float(
-                month_match.group(1)
-            )
+        # 1. Parse Explicit Durations (e.g., "1.5 years", "6 months")
+        year_match = re.search(r"(\d+(?:\.\d+)?)\s*(?:years?|yrs?)", text)
+        month_match = re.search(r"(\d+(?:\.\d+)?)\s*(?:months?|mos?)", text)
 
         if year_match or month_match:
+            years = float(year_match.group(1)) if year_match else 0.0
+            months = float(month_match.group(1)) if month_match else 0.0
+            return None, years + (months / 12)
 
-            return round(
-                years + months / 12,
-                1,
-            )
-
-        # =====================================================
-        # Date range
-        # =====================================================
-
+        # 2. Parse Date Ranges (e.g., "Jan 2020 - Dec 2022", "2021 - Present")
         date_range = re.search(
-            r"(?P<start_month>"
-            r"jan(?:uary)?|"
-            r"feb(?:ruary)?|"
-            r"mar(?:ch)?|"
-            r"apr(?:il)?|"
-            r"may|"
-            r"jun(?:e)?|"
-            r"jul(?:y)?|"
-            r"aug(?:ust)?|"
-            r"sep(?:tember)?|"
-            r"oct(?:ober)?|"
-            r"nov(?:ember)?|"
-            r"dec(?:ember)?"
-            r")?"
-            r"\s*"
-            r"(?P<start_year>20\d{2})"
+            r"(?P<start_month>jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)?"
+            r"\s*(?P<start_year>20\d{2})"
             r"\s*-\s*"
-            r"(?P<end_month>"
-            r"jan(?:uary)?|"
-            r"feb(?:ruary)?|"
-            r"mar(?:ch)?|"
-            r"apr(?:il)?|"
-            r"may|"
-            r"jun(?:e)?|"
-            r"jul(?:y)?|"
-            r"aug(?:ust)?|"
-            r"sep(?:tember)?|"
-            r"oct(?:ober)?|"
-            r"nov(?:ember)?|"
-            r"dec(?:ember)?"
-            r")?"
-            r"\s*"
-            r"(?P<end_year>20\d{2}|present|current)",
+            r"(?P<end_month>jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)?"
+            r"\s*(?P<end_year>20\d{2}|present|current)",
             text,
         )
 
         if date_range:
+            start_year = int(date_range.group("start_year"))
+            start_month_name = date_range.group("start_month")
+            start_month = cls.MONTH_MAP.get(start_month_name, 1) if start_month_name else 1
+            start_date = date(start_year, start_month, 1)
 
-            start_year = int(
-                date_range.group(
-                    "start_year"
-                )
-            )
-
-            end_value = date_range.group(
-                "end_year"
-            )
-
-            if end_value in {
-                "present",
-                "current",
-            }:
-
-                end_year = date.today().year
-
+            end_val = date_range.group("end_year")
+            if end_val in {"present", "current"}:
+                end_date = date.today()
             else:
+                end_year = int(end_val)
+                end_month_name = date_range.group("end_month")
+                end_month = cls.MONTH_MAP.get(end_month_name, 12) if end_month_name else 12
+                end_date = date(end_year, end_month, 1)
 
-                end_year = int(
-                    end_value
-                )
+            if start_date <= end_date:
+                return (start_date, end_date), 0.0
 
-            # ---------------------------------------------
-            # Month-aware calculation
-            # ---------------------------------------------
+        return None, 0.0
 
-            start_month_name = (
-                date_range.group(
-                    "start_month"
-                )
-            )
+    @staticmethod
+    def _merge_intervals(intervals: List[Tuple[date, date]]) -> List[Tuple[date, date]]:
+        """
+        Sorts and merges overlapping date ranges into continuous blocks.
+        """
+        if not intervals:
+            return []
 
-            end_month_name = (
-                date_range.group(
-                    "end_month"
-                )
-            )
+        sorted_intervals = sorted(intervals, key=lambda x: x[0])
+        merged = [sorted_intervals[0]]
 
-            if (
-                start_month_name
-                and end_month_name
-            ):
+        for current_start, current_end in sorted_intervals[1:]:
+            last_start, last_end = merged[-1]
 
-                month_map = {
-                    "jan": 1,
-                    "january": 1,
-                    "feb": 2,
-                    "february": 2,
-                    "mar": 3,
-                    "march": 3,
-                    "apr": 4,
-                    "april": 4,
-                    "may": 5,
-                    "jun": 6,
-                    "june": 6,
-                    "jul": 7,
-                    "july": 7,
-                    "aug": 8,
-                    "august": 8,
-                    "sep": 9,
-                    "september": 9,
-                    "oct": 10,
-                    "october": 10,
-                    "nov": 11,
-                    "november": 11,
-                    "dec": 12,
-                    "december": 12,
-                }
+            if current_start <= last_end:
+                merged[-1] = (last_start, max(last_end, current_end))
+            else:
+                merged.append((current_start, current_end))
 
-                start_month = month_map[
-                    start_month_name
-                ]
+        return merged
 
-                if end_value in {
-                    "present",
-                    "current",
-                }:
-
-                    end_month = date.today().month
-
-                else:
-
-                    end_month = month_map[
-                        end_month_name
-                    ]
-
-                total_months = (
-                    (end_year - start_year)
-                    * 12
-                    + (
-                        end_month
-                        - start_month
-                    )
-                )
-
-                return max(
-                    0.0,
-                    round(
-                        total_months / 12,
-                        1,
-                    ),
-                )
-
-            # ---------------------------------------------
-            # Year-only range
-            # ---------------------------------------------
-
-            return max(
-                0.0,
-                round(
-                    end_year - start_year,
-                    1,
-                ),
-            )
-
-        # =====================================================
-        # Single year
-        # =====================================================
-
-        single_year = re.fullmatch(
-            r"20\d{2}",
-            text,
-        )
-
-        if single_year:
-            return 0.0
-
-        return 0.0
-
-    # =========================================================
-    # Professional Experience
-    # =========================================================
+    # Professional Experience Calculation
 
     @classmethod
     def calculate_professional_experience(
@@ -314,50 +145,42 @@ class CandidateLevelService:
         experience,
     ) -> float:
         """
-        Calculate total professional experience.
-
-        Internships, trainee roles, and apprenticeships
-        are not counted toward professional experience.
-
-        This is important because:
-
-            Internship ≠ full-time professional experience
+        Calculate total professional experience while excluding internships and
+        merging overlapping full-time date ranges.
         """
-
         if not experience:
             return 0.0
 
-        total_years = 0.0
+        intervals: List[Tuple[date, date]] = []
+        standalone_years = 0.0
 
         for item in experience:
-
-            if cls._is_internship(
-                item.role
-            ):
+            if cls._is_internship(item.role):
                 continue
 
-            total_years += (
-                cls._parse_duration(
-                    item.duration or ""
-                )
-            )
+            interval, fallback_years = cls._parse_to_interval(item.duration or "")
+            if interval:
+                intervals.append(interval)
+            else:
+                standalone_years += fallback_years
 
-        return round(
-            total_years,
-            1,
-        )
+        # Merge overlapping timelines
+        merged = cls._merge_intervals(intervals)
 
-    # =========================================================
-    # Candidate Level
-    # =========================================================
+        total_months = 0
+        for start, end in merged:
+            m = (end.year - start.year) * 12 + (end.month - start.month) + 1
+            total_months += max(0, m)
+
+        total_years = (total_months / 12) + standalone_years
+        return round(total_years, 1)
+
+    # Candidate Level Determination
 
     @classmethod
-    def determine_level(
-        cls,
-        experience,
-    ) -> CandidateLevel:
+    def determine_level(cls, experience) -> CandidateLevel:
         """
-        Determine candidate career level.
+        Determine candidate career level based on total calculated experience.
 
         Classification:
 
@@ -373,12 +196,7 @@ class CandidateLevelService:
         >7 years
             → SENIOR
         """
-
-        years = (
-            cls.calculate_professional_experience(
-                experience
-            )
-        )
+        years = cls.calculate_professional_experience(experience)
 
         if years <= 0:
             return CandidateLevel.FRESHER

@@ -42,6 +42,16 @@ export interface CandidateProfile {
   github: string | null;
 }
 
+
+export interface SourceVerification {
+  verified: boolean;
+  grounded_skills: number;
+  unresolved_skills: number;
+  grounded_projects: number;
+  unresolved_projects: number;
+
+}
+
 export interface ATSReport {
   candidate_level: CandidateLevel;
 
@@ -67,6 +77,7 @@ export interface ATSReport {
   skills_feedback: string[];
 
   recommendations: string[];
+  source_verification: SourceVerification;
 }
 
 export interface ResumeDetail {

@@ -8,6 +8,7 @@ import {
   User,
   Settings,
   Sparkles,
+  Search,
 } from "lucide-react";
 
 import SidebarItem from "./SidebarItem";
@@ -22,7 +23,6 @@ const mainMenuItems = [
     label: "Resume Library",
     icon: FileText,
     path: "/resume",
-    
   },
   {
     label: "Resume Analysis",
@@ -33,13 +33,16 @@ const mainMenuItems = [
     label: "Recommended Jobs",
     icon: Briefcase,
     path: "/jobs",
-    
+  },
+  {
+    label: "AI Job Research",
+    icon: Search,
+    path: "/jobs/research",
   },
   {
     label: "Applications Pipeline",
     icon: ClipboardList,
     path: "/applications",
-    
   },
   {
     label: "AI Mock Interview",
@@ -51,7 +54,6 @@ const mainMenuItems = [
     icon: History,
     path: "/interview/history",
   },
-  
 ];
 
 const accountMenuItems = [
@@ -71,6 +73,10 @@ const SidebarMenu = () => {
   return (
     <nav className="flex flex-1 flex-col px-4 py-6">
 
+      {/* =====================================================
+          MAIN NAVIGATION
+          ===================================================== */}
+
       <p className="mb-3 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
         Main Navigation
       </p>
@@ -82,10 +88,13 @@ const SidebarMenu = () => {
             icon={item.icon}
             label={item.label}
             path={item.path}
-           
           />
         ))}
       </div>
+
+      {/* =====================================================
+          ACCOUNT & SYSTEM
+          ===================================================== */}
 
       <p className="mb-3 mt-8 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
         Account & System

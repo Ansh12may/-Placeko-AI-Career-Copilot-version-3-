@@ -1,7 +1,7 @@
-
 import "./App.css";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+
 import LandingPage from "./pages/Landing/landingPage";
 import DashboardPage from "./pages/DashboardPage/DashboardPage";
 import AuthPage from "./pages/Auth/AuthPage";
@@ -20,250 +20,323 @@ import InterviewHistoryPage from "./pages/Interview/InterviewHistoryPage";
 import ApplicationsPage from "./pages/applications/ApplicationsPage";
 import OAuthCallbackPage from "./pages/Auth/OAuthCallbackPage";
 
+// NEW
+import JobResearchPage from "./pages/JobResearchPage/JobResearchPage";
 
 function App() {
   const navigate = useNavigate();
 
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] =
+    useState(false);
 
   useEffect(() => {
-  document.documentElement.classList.toggle("dark", isDarkMode);
-}, [isDarkMode]);
+    document.documentElement.classList.toggle(
+      "dark",
+      isDarkMode
+    );
+  }, [isDarkMode]);
 
   const handleNavigate = (tab: string) => {
-  switch (tab) {
-    case "landing":
-      navigate("/");
-      break;
+    switch (tab) {
+      case "landing":
+        navigate("/");
+        break;
 
-    case "auth":
-      navigate("/auth");
-      break;
+      case "auth":
+        navigate("/auth");
+        break;
 
-    case "dashboard":
-      navigate("/dashboard");
-      break;
+      case "dashboard":
+        navigate("/dashboard");
+        break;
 
-    case "profile":
-      navigate("/profile");
-      break;
+      case "profile":
+        navigate("/profile");
+        break;
 
-    case "settings":
-      navigate("/settings");
-      break;
+      case "settings":
+        navigate("/settings");
+        break;
 
-    case "resumes":
-      navigate("/resume");
-      break;
+      case "resumes":
+        navigate("/resume");
+        break;
 
-    case "resume-details":
-      navigate("/resume-analysis");
-      break;
+      case "resume-details":
+        navigate("/resume-analysis");
+        break;
 
-    case "job-details":
-      navigate("/jobs");
-      break;
+      case "job-details":
+        navigate("/jobs");
+        break;
 
-    case "applications":
-      navigate("/applications");
-      break;
+      // NEW
+      case "job-research":
+        navigate("/jobs/research");
+        break;
 
-    case "mock-interview":
-      navigate("/interview");
-      break;
+      case "applications":
+        navigate("/applications");
+        break;
 
-    case "interview-report":
-      navigate("/interview/history");
-      break;
+      case "mock-interview":
+        navigate("/interview");
+        break;
 
-    default:
-      console.warn(`Unknown navigation tab: ${tab}`);
-  }
-};
+      case "interview-report":
+        navigate("/interview/history");
+        break;
+
+      default:
+        console.warn(
+          `Unknown navigation tab: ${tab}`
+        );
+    }
+  };
 
   const handleToggleDarkMode = () => {
-    setIsDarkMode((prev) => !prev);
+    setIsDarkMode(
+      (prev) => !prev
+    );
   };
 
   return (
     <Routes>
+
+      {/* =====================================================
+          LANDING
+          ===================================================== */}
+
       <Route
         path="/"
         element={
           <LandingPage
             onNavigate={handleNavigate}
             isDarkMode={isDarkMode}
-            onToggleDarkMode={handleToggleDarkMode}
+            onToggleDarkMode={
+              handleToggleDarkMode
+            }
           />
         }
       />
 
+      {/* =====================================================
+          OAUTH
+          ===================================================== */}
+
       <Route
+        path="/oauth/callback"
+        element={
+          <OAuthCallbackPage />
+        }
+      />
 
-  path="/oauth/callback"
-
-  element={<OAuthCallbackPage />}
-
-/>
+      {/* =====================================================
+          AUTH
+          ===================================================== */}
 
       <Route
         path="/auth"
-        element={<AuthPage />}
+        element={
+          <AuthPage />
+        }
+      />
+
+      {/* =====================================================
+          DASHBOARD
+          ===================================================== */}
+
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <DashboardPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* =====================================================
+          PROFILE
+          ===================================================== */}
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <ProfilePage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* =====================================================
+          SETTINGS
+          ===================================================== */}
+
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <SettingsPage
+                isDarkMode={
+                  isDarkMode
+                }
+                onToggleDarkMode={
+                  handleToggleDarkMode
+                }
+              />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* =====================================================
+          RESUME LIBRARY
+          ===================================================== */}
+
+      <Route
+        path="/resume"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <ResumeLibraryPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* =====================================================
+          RESUME ANALYSIS
+          ===================================================== */}
+
+      <Route
+        path="/resume-analysis/:resumeId"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <ResumeAnalysisPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
       />
 
       <Route
-    path="/dashboard"
-    element={
-    <ProtectedRoute>
-      <DashboardLayout>
-      <DashboardPage />
-      </DashboardLayout>
-    </ProtectedRoute>
-  }
-/>
-<Route
+        path="/resume-analysis"
+        element={
+          <ProtectedRoute>
+            <ResumeAnalysisRedirect />
+          </ProtectedRoute>
+        }
+      />
 
-  path="/profile"
+      {/* =====================================================
+          RECOMMENDED JOBS
+          ===================================================== */}
 
-  element={
-    <ProtectedRoute>
-      <DashboardLayout>
-        <ProfilePage />
-      </DashboardLayout>
+      <Route
+        path="/jobs"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <RecommendedJobsPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
 
-    </ProtectedRoute>
+      {/* =====================================================
+          AI JOB RESEARCH
+          ===================================================== */}
 
-  }
+      <Route
+        path="/jobs/research"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <JobResearchPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
 
-/>
+      {/* =====================================================
+          INTERVIEW SETUP
+          ===================================================== */}
 
+      <Route
+        path="/interview"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <InterviewSetupPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
 
-<Route
-  path="/settings"
-  element={
-    <ProtectedRoute>
-      <DashboardLayout>
-        <SettingsPage
-          isDarkMode={isDarkMode}
-          onToggleDarkMode={handleToggleDarkMode}
-        />
-      </DashboardLayout>
-    </ProtectedRoute>
-  }
+      {/* =====================================================
+          INTERVIEW HISTORY
+          ===================================================== */}
 
-/>
+      <Route
+        path="/interview/history"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <InterviewHistoryPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
 
-<Route
+      {/* =====================================================
+          INTERVIEW SESSION
+          ===================================================== */}
 
-  path="/resume"
-  element={
-    <ProtectedRoute>
-      <DashboardLayout>
-        <ResumeLibraryPage />
-      </DashboardLayout>
-    </ProtectedRoute>
+      <Route
+        path="/interview/:sessionId"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <InterviewPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
 
-  }
+      {/* =====================================================
+          INTERVIEW REPORT
+          ===================================================== */}
 
-/>
+      <Route
+        path="/interview/:sessionId/report"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <InterviewReportPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
 
+      {/* =====================================================
+          APPLICATIONS
+          ===================================================== */}
 
-<Route
-
-  path="/resume-analysis/:resumeId"
-  element={
-    <ProtectedRoute>
-      <DashboardLayout>
-        <ResumeAnalysisPage />
-      </DashboardLayout>
-    </ProtectedRoute>
-
-  }
-
-/>
-
-<Route
-
-  path="/resume-analysis"
-  element={
-    <ProtectedRoute>
-      <ResumeAnalysisRedirect />
-    </ProtectedRoute>
-
-  }
-
-/>
-
-<Route
-
-  path="/jobs"
-
-  element={
-    <ProtectedRoute>
-      <DashboardLayout>
-        <RecommendedJobsPage />
-      </DashboardLayout>
-    </ProtectedRoute>
-
-  }
-
-/>
-
-<Route
-  path="/interview"
-  element={
-    <ProtectedRoute>
-      <DashboardLayout>
-        <InterviewSetupPage />
-      </DashboardLayout>
-    </ProtectedRoute>
-  }
-/>
-
-<Route
-  path="/interview/history"
-  element={
-    <ProtectedRoute>
-      <DashboardLayout>
-        <InterviewHistoryPage />
-      </DashboardLayout>
-    </ProtectedRoute>
-  }
-/>
-
-<Route
-  path="/interview/:sessionId"
-  element={
-    <ProtectedRoute>
-      <DashboardLayout>
-        <InterviewPage />
-      </DashboardLayout>
-    </ProtectedRoute>
-  }
-/>
-
-<Route
-  path="/interview/:sessionId/report"
-  element={
-    <ProtectedRoute>
-      <DashboardLayout>
-        <InterviewReportPage />
-      </DashboardLayout>
-    </ProtectedRoute>
-  }
-/>
-
-<Route
-  path="/applications"
-  element={
-    <ProtectedRoute>
-       <DashboardLayout>
-  <ApplicationsPage />
-  </DashboardLayout>
-  </ProtectedRoute>
-
-  }
-/>
+      <Route
+        path="/applications"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <ApplicationsPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
 
     </Routes>
   );

@@ -123,7 +123,9 @@ class RerankerService:
         # Return Top-K
         # -----------------------------------------------------
 
-        return [
-            job
-            for job, _ in scored_jobs[:top_k]
-        ]
+        ranked_jobs = []
+        for job, score in scored_jobs[:top_k]:
+            job.reranker_score = float(score)
+            ranked_jobs.append(job)
+            
+        return ranked_jobs

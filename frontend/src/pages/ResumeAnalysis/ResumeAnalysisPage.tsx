@@ -11,6 +11,8 @@ import {
   Code2,
   Award,
   UserRound,
+  ShieldCheck,
+  ShieldAlert,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -93,6 +95,20 @@ const ResumeAnalysisPage = () => {
         ? "text-amber-600 dark:text-amber-400"
         : "text-red-600 dark:text-red-400";
 
+  const sourceVerification = ats_report.source_verification ?? {
+
+  verified: false,
+
+  grounded_skills: 0,
+
+  unresolved_skills: 0,
+
+  grounded_projects: 0,
+
+  unresolved_projects: 0,
+
+};
+
   return (
     <div className="min-h-full bg-slate-50 p-6 dark:bg-slate-950">
       {/* Header */}
@@ -131,8 +147,8 @@ const ResumeAnalysisPage = () => {
 
           <p className="mt-1 font-semibold capitalize text-indigo-600 dark:text-indigo-400">
             {ats_report.candidate_level
-  ? ats_report.candidate_level.replace("_", " ")
-  : "Not available"}
+              ? ats_report.candidate_level.replace("_", " ")
+              : "Not available"}
           </p>
         </div>
       </div>
@@ -167,6 +183,89 @@ const ResumeAnalysisPage = () => {
           icon={<Award className="h-5 w-5" />}
         />
       </div>
+
+      {/* Source Verification */}
+      <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="flex items-center gap-3">
+              {sourceVerification.verified ? (
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+              ) : (
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
+                  <ShieldAlert className="h-5 w-5" />
+                </div>
+              )}
+
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                  Source Verification
+                </h2>
+
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Reliability of extracted resume information
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+              sourceVerification.verified
+                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
+            }`}
+          >
+            {sourceVerification.verified
+              ? "Verified"
+              : "Review Required"}
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <VerificationStat
+            label="Skills Verified"
+            value={sourceVerification.grounded_skills}
+            type="success"
+          />
+
+          <VerificationStat
+            label="Skills Unresolved"
+            value={sourceVerification.unresolved_skills}
+            type={
+              sourceVerification.unresolved_skills > 0
+                ? "warning"
+                : "success"
+            }
+          />
+
+          <VerificationStat
+            label="Projects Verified"
+            value={sourceVerification.grounded_projects}
+            type="success"
+          />
+
+          <VerificationStat
+            label="Projects Unresolved"
+            value={sourceVerification.unresolved_projects}
+            type={
+              sourceVerification.unresolved_projects > 0
+                ? "warning"
+                : "success"
+            }
+          />
+        </div>
+
+        <div className="mt-5 rounded-xl bg-slate-50 p-4 dark:bg-slate-800/60">
+          <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+            {sourceVerification.verified
+              ? "The extracted skills and project information used in this analysis were verified against the uploaded resume."
+              : "Some extracted information could not be verified against the uploaded resume. Unresolved information was excluded from ATS scoring where applicable."}
+          </p>
+        </div>
+      </section>
 
       {/* Candidate Profile */}
       <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -338,20 +437,26 @@ const ResumeAnalysisPage = () => {
         />
 
         <div className="mt-5 space-y-3">
-          {ats_report.recommendations.map((recommendation, index) => (
-            <div
-              key={`${recommendation}-${index}`}
-              className="flex gap-3 rounded-xl bg-white p-4 dark:bg-slate-900"
-            >
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400">
-                {index + 1}
-              </div>
+          {ats_report.recommendations.length === 0 ? (
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              No additional recommendations available.
+            </p>
+          ) : (
+            ats_report.recommendations.map((recommendation, index) => (
+              <div
+                key={`${recommendation}-${index}`}
+                className="flex gap-3 rounded-xl bg-white p-4 dark:bg-slate-900"
+              >
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400">
+                  {index + 1}
+                </div>
 
-              <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                {recommendation}
-              </p>
-            </div>
-          ))}
+                <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                  {recommendation}
+                </p>
+              </div>
+            ))
+          )}
         </div>
       </section>
     </div>
@@ -449,6 +554,35 @@ const ScoreRow = ({
   );
 };
 
+interface VerificationStatProps {
+  label: string;
+  value: number;
+  type: "success" | "warning";
+}
+
+const VerificationStat = ({
+  label,
+  value,
+  type,
+}: VerificationStatProps) => {
+  const valueClass =
+    type === "success"
+      ? "text-emerald-600 dark:text-emerald-400"
+      : "text-amber-600 dark:text-amber-400";
+
+  return (
+    <div className="rounded-xl border border-slate-100 p-4 dark:border-slate-800">
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+        {label}
+      </p>
+
+      <p className={`mt-2 text-2xl font-bold ${valueClass}`}>
+        {value}
+      </p>
+    </div>
+  );
+};
+
 interface SectionHeaderProps {
   icon: React.ReactNode;
   title: string;
@@ -522,15 +656,21 @@ const FeedbackCard = ({
       </div>
 
       <ul className="mt-5 space-y-3">
-        {items.map((item, index) => (
-          <li
-            key={`${item}-${index}`}
-            className="flex gap-3 text-sm leading-6 text-slate-600 dark:text-slate-400"
-          >
-            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
-            {item}
+        {items.length === 0 ? (
+          <li className="text-sm text-slate-400">
+            No specific feedback available.
           </li>
-        ))}
+        ) : (
+          items.map((item, index) => (
+            <li
+              key={`${item}-${index}`}
+              className="flex gap-3 text-sm leading-6 text-slate-600 dark:text-slate-400"
+            >
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
+              {item}
+            </li>
+          ))
+        )}
       </ul>
     </section>
   );

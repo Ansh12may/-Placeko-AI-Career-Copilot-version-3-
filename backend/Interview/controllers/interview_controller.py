@@ -13,44 +13,13 @@ Responsibilities
 Contains NO business logic.
 """
 
-from fastapi import (
+from fastapi import APIRouter,Depends,HTTPException,status,UploadFile,File,Form
+from backend.auth.dependency.auth_dependency import get_current_user
+from backend.Interview.services.interview_service import InterviewService
+from backend.Interview.schemas.interview_request import InterviewRequest
+from backend.Interview.schemas.interview_answer import InterviewAnswer
 
-    APIRouter,
-
-    Depends,
-
-    HTTPException,
-
-    status,
-
-    UploadFile,
-
-    File,
-
-    Form,
-
-)
-
-from backend.auth.dependency.auth_dependency import (
-    get_current_user,
-)
-
-from backend.Interview.services.interview_service import (
-    InterviewService,
-)
-
-from backend.Interview.schemas.interview_request import (
-    InterviewRequest,
-)
-
-from backend.Interview.schemas.interview_answer import (
-    InterviewAnswer,
-)
-
-
-# =========================================================
 # ROUTER
-# =========================================================
 
 router = APIRouter(
     prefix="/api/interview",
@@ -59,22 +28,14 @@ router = APIRouter(
 
 interview_service = InterviewService()
 
-
-# =========================================================
 # START INTERVIEW
-# =========================================================
 
 @router.post("/start")
-async def start_interview(
-    request: InterviewRequest,
-    current_user=Depends(get_current_user),
-):
+async def start_interview(request: InterviewRequest,current_user=Depends(get_current_user)):
     """
     Start a new personalized interview.
     """
-
     try:
-
         user_id = str(
             current_user["_id"]
         )
@@ -105,10 +66,7 @@ async def start_interview(
             detail=str(exc),
         )
 
-
-# =========================================================
 # SUBMIT ANSWER
-# =========================================================
 
 @router.post("/answer/{session_id}")
 async def submit_answer(
@@ -119,19 +77,15 @@ async def submit_answer(
     """
     Submit an answer for the current question.
     """
-
     try:
-
         user_id = str(
             current_user["_id"]
         )
-
         session = await interview_service.submit_answer(
             session_id=session_id,
             answer=answer,
             user_id=user_id,
         )
-
         return {
             "success": True,
             "data": session,
@@ -154,9 +108,8 @@ async def submit_answer(
         )
 
 
-# =========================================================
+
 # FINISH INTERVIEW
-# =========================================================
 
 @router.post("/finish/{session_id}")
 async def finish_interview(
@@ -197,11 +150,7 @@ async def finish_interview(
             detail=str(exc),
         )
 
-
-# =========================================================
 # GET SESSION
-# =========================================================
-
 @router.get("/session/{session_id}")
 async def get_session(
     session_id: str,
@@ -243,10 +192,7 @@ async def get_session(
         )
 
 
-# =========================================================
 # CURRENT QUESTION
-# =========================================================
-
 @router.get("/question/{session_id}")
 async def current_question(
     session_id: str,
@@ -255,13 +201,10 @@ async def current_question(
     """
     Retrieve the current interview question.
     """
-
     try:
-
         user_id = str(
             current_user["_id"]
         )
-
         question = await interview_service.get_current_question(
             session_id=session_id,
             user_id=user_id,
@@ -286,10 +229,7 @@ async def current_question(
             detail=str(exc),
         )
 
-
-# =========================================================
 # INTERVIEW HISTORY
-# =========================================================
 
 @router.get("/history")
 async def get_interview_history(
@@ -322,13 +262,7 @@ async def get_interview_history(
             detail=str(exc),
         )
 
-
-
-
-
-# =========================================================
 # SUBMIT VOICE ANSWER
-# =========================================================
 
 @router.post("/voice/{session_id}")
 async def submit_voice_answer(
@@ -340,9 +274,7 @@ async def submit_voice_answer(
     """
     Submit a voice answer for the current interview question.
     """
-
     try:
-
         user_id = str(
             current_user["_id"]
         )

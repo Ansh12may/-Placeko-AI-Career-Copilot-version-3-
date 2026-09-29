@@ -19,7 +19,6 @@ oauth2_scheme = OAuth2PasswordBearer(
 repository = AuthRepository()
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
-    
     """
     Return the authenticated user.
     """

@@ -1,3 +1,38 @@
+"""
+Job Search Agent
+
+Responsible for:
+
+1. Reading the grounded CandidateProfile from GraphState.
+2. Generating a job-search query using the LLM.
+3. Fetching fresh jobs from JSearch.
+4. Storing fresh jobs in GraphState.
+5. Indexing fresh jobs into Pinecone.
+
+Production Pipeline:
+
+Grounded CandidateProfile
+        ↓
+JobSearchAgent
+        ↓
+LLM → Search Query
+        ↓
+JSearch
+        ↓
+Fresh Jobs
+        ↓
+VectorService.store_jobs()
+        ↓
+Pinecone
+
+This agent does NOT:
+- Generate embeddings directly
+- Query Pinecone
+- Perform semantic retrieval
+- Perform CrossEncoder reranking
+- Rank jobs
+"""
+
 from backend.utils.base_agent import BaseAgent
 from backend.graphs.state import GraphState
 from backend.Jobs.prompts.job_search_prompt import JOB_SEARCH_PROMPT
@@ -15,14 +50,20 @@ class JobSearchAgent(BaseAgent):
         self.system_prompt = JOB_SEARCH_PROMPT
 
         self.job_tool = JobSearchTool()
-
-        # Handles job embeddings and Pinecone indexing.
         self.vector_service = VectorService()
+
+    # =========================================================
+    # Prepare Input
+    # =========================================================
 
     def prepare_input(
         self,
         state: GraphState,
     ) -> str:
+        """
+        Read the grounded CandidateProfile from GraphState
+        and convert it to JSON for query generation.
+        """
 
         profile = state.get("candidate_profile")
 
@@ -35,10 +76,18 @@ class JobSearchAgent(BaseAgent):
             indent=2
         )
 
+    # =========================================================
+    # Generate Search Query
+    # =========================================================
+
     def generate_query(
         self,
         candidate_json: str,
     ) -> str:
+        """
+        Generate a concise job-search query from the
+        CandidateProfile using the LLM.
+        """
 
         messages = [
             (
@@ -62,53 +111,69 @@ class JobSearchAgent(BaseAgent):
 
         return query
 
+    # =========================================================
+    # Search Jobs
+    # =========================================================
+
     def invoke_tool(
         self,
         query: str,
     ):
+        """
+        Fetch fresh jobs from JSearch.
+        """
 
         return self.job_tool.search_jobs(
             query
         )
 
+    # =========================================================
+    # Run Agent
+    # =========================================================
+
     def run(
         self,
         state: GraphState,
     ) -> GraphState:
+        """
+        Execute the job search stage.
 
-        # =====================================================
+        Flow:
+
+        CandidateProfile
+              ↓
+        LLM Query Generation
+              ↓
+        JSearch
+              ↓
+        Fresh Jobs
+              ↓
+        Pinecone Indexing
+        """
+
         # 1. CandidateProfile → JSON
-        # =====================================================
 
         candidate_json = self.prepare_input(
             state
         )
 
-        # =====================================================
-        # 2. LLM → Job Search Query
-        # =====================================================
+        # 2. CandidateProfile → Search Query
 
         query = self.generate_query(
             candidate_json
         )
 
-        # =====================================================
-        # 3. JSearch → Fresh Jobs
-        # =====================================================
+        # 3. Search JSearch for fresh jobs
 
         jobs = self.invoke_tool(
             query
         )
 
-        # =====================================================
-        # 4. Store Fresh Jobs in GraphState
-        # =====================================================
+        # 4. Store fresh jobs in GraphState
 
         state["jobs"] = jobs
 
-        # =====================================================
-        # 5. Index Fresh Jobs in Pinecone
-        # =====================================================
+        # 5. Index fresh jobs in Pinecone
 
         if jobs:
             self.vector_service.store_jobs(

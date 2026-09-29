@@ -86,3 +86,30 @@ class ApplicationUpdateRequest(BaseModel):
     notes: Optional[str] = None
 
     status: Optional[ApplicationStatus] = None
+
+
+# =========================================================
+
+# PREPARE APPLICATION
+
+# =========================================================
+
+class ApplicationPrepareRequest(BaseModel):
+
+    """
+
+    Request for starting the agentic application workflow.
+
+    The backend uses the authenticated user's candidate
+
+    profile and the selected job to prepare the application.
+
+    """
+
+    job_id: str = Field(
+
+        min_length=1,
+
+        max_length=200,
+
+    )

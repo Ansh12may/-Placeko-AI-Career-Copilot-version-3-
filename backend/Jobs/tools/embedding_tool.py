@@ -37,9 +37,9 @@ class EmbeddingTool:
 
         self.hf_token = os.getenv("HF_TOKEN")
 
-    # =========================================================
+    
     # Local Model
-    # =========================================================
+   
 
     def _get_model(self) -> SentenceTransformer:
 
@@ -51,14 +51,11 @@ class EmbeddingTool:
 
         return self.model
 
-    # =========================================================
+    
     # Remote Embedding
-    # =========================================================
+   
 
-    def _get_remote_embedding(
-        self,
-        text: str,
-    ) -> List[float]:
+    def _get_remote_embedding(self,text: str) -> List[float]:
 
         if not self.hf_token:
             raise RuntimeError(
@@ -119,32 +116,24 @@ class EmbeddingTool:
             "Hugging Face."
         )
 
-    # =========================================================
+   
     # Single Embedding
-    # =========================================================
+   
 
-    def get_embedding(
-        self,
-        text: str,
-    ) -> List[float]:
+    def get_embedding(self,text: str) -> List[float]:
 
         if not text or not text.strip():
             return []
-
-        # -----------------------------------------------------
+        
         # Production
-        # -----------------------------------------------------
-
+       
         if self.use_remote:
 
-            return self._get_remote_embedding(
-                text
-            )
+            return self._get_remote_embedding(text)
 
-        # -----------------------------------------------------
+       
         # Local development
-        # -----------------------------------------------------
-
+      
         model = self._get_model()
 
         embedding = model.encode(
@@ -154,14 +143,10 @@ class EmbeddingTool:
 
         return embedding.tolist()
 
-    # =========================================================
     # Multiple Embeddings
-    # =========================================================
+  
 
-    def get_embeddings(
-        self,
-        texts: List[str],
-    ) -> List[List[float]]:
+    def get_embeddings(self,texts: List[str]) -> List[List[float]]:
 
         if not texts:
             return []
@@ -179,10 +164,9 @@ class EmbeddingTool:
         if not cleaned_texts:
             return []
 
-        # -----------------------------------------------------
+     
         # Local development
-        # -----------------------------------------------------
-
+        
         if not self.use_remote:
 
             model = self._get_model()

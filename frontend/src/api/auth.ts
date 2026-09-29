@@ -1,9 +1,5 @@
 import api from "./axios.ts";
-
-
-// =========================================================
 // Login Response
-// =========================================================
 
 export interface LoginResponse {
   success: boolean;
@@ -15,10 +11,7 @@ export interface LoginResponse {
   };
 }
 
-
-// =========================================================
 // Register Response
-// =========================================================
 
 export interface RegisterResponse {
   success: boolean;
@@ -30,10 +23,7 @@ export interface RegisterResponse {
   };
 }
 
-
-// =========================================================
 // User
-// =========================================================
 
 export interface User {
   id: string;
@@ -44,30 +34,22 @@ export interface User {
   email_verified: boolean;
 }
 
-
-// =========================================================
 // Current User Response
-// =========================================================
 
 interface CurrentUserResponse {
   success: boolean;
   data: User;
 }
 
-
-// =========================================================
 // Google OAuth Response
-// =========================================================
 
 export interface GoogleLoginResponse {
   success: boolean;
   authorization_url: string;
 }
 
-
-// =========================================================
 // Email Login
-// =========================================================
+
 
 export const login = async (
   email: string,
@@ -85,10 +67,7 @@ export const login = async (
   return response.data;
 };
 
-
-// =========================================================
 // Register
-// =========================================================
 
 export const register = async (
   fullName: string,
@@ -109,10 +88,7 @@ export const register = async (
   return response.data;
 };
 
-
-// =========================================================
 // Get Current User
-// =========================================================
 
 export const getCurrentUser =
   async (): Promise<User> => {
@@ -136,9 +112,8 @@ export const getCurrentUser =
   };
 
 
-// =========================================================
+
 // Logout
-// =========================================================
 
 export const logout =
   async (): Promise<void> => {
@@ -164,10 +139,8 @@ export const logout =
     );
   };
 
-
-// =========================================================
 // Google OAuth
-// =========================================================
+
 
 export const getGoogleLoginUrl =
   async (): Promise<string> => {

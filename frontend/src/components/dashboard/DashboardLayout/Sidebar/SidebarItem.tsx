@@ -24,9 +24,10 @@ const SidebarItem = ({
         location.pathname.startsWith("/interview/") &&
         !location.pathname.startsWith("/interview/history")
       )
-    : location.pathname === path ||
-      (path !== "/dashboard" &&
-        location.pathname.startsWith(`${path}/`));
+    : path === "/dashboard" || path === "/jobs"
+      ? location.pathname === path
+      : location.pathname === path ||
+        location.pathname.startsWith(`${path}/`);
 
   return (
     <button

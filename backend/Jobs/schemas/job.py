@@ -1,5 +1,6 @@
 from pydantic import BaseModel, HttpUrl,Field
 from typing import List, Optional
+from backend.Jobs.schemas.job_readiness import JobReadiness
 
 class Job(BaseModel):
     """
@@ -16,4 +17,7 @@ class Job(BaseModel):
     description: str
     apply_url: Optional[HttpUrl] = None
     source: str
-    match_score: float | None = None
+    pinecone_score: float | None = None
+    reranker_score: float | None = None
+    job_readiness: JobReadiness | None = None
+   

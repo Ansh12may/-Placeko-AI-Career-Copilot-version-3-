@@ -16,21 +16,10 @@ AI-generated qualitative feedback is handled separately
 by ResumeAnalysisService.
 """
 
-from backend.Resume.schemas.candidate import (
-    CandidateProfile,
-)
-
-from backend.ATS.schemas.ats_report import (
-    SectionScore,
-)
-
-from backend.ATS.schemas.candidate_level import (
-    CandidateLevel,
-)
-
-from backend.ATS.services.candidate_level_service import (
-    CandidateLevelService,
-)
+from backend.Resume.schemas.candidate import (CandidateProfile)
+from backend.ATS.schemas.ats_report import (SectionScore)
+from backend.ATS.schemas.candidate_level import (CandidateLevel)
+from backend.ATS.services.candidate_level_service import (CandidateLevelService)
 
 
 class ATSScoringService:
@@ -106,14 +95,10 @@ class ATSScoringService:
         },
     }
 
-    # =========================================================
+    
     # Contact Information
-    # =========================================================
-
-    def score_contact(
-        self,
-        profile: CandidateProfile,
-    ) -> SectionScore:
+   
+    def score_contact(self,profile: CandidateProfile) -> SectionScore:
 
         score = 0
 
@@ -137,25 +122,12 @@ class ATSScoringService:
             max_score=10,
         )
 
-    # =========================================================
+  
     # Summary
-    # =========================================================
+    
 
-    def score_summary(
-        self,
-        profile: CandidateProfile,
-    ) -> SectionScore:
-        """
-        Score the professional summary.
-
-        The summary is evaluated for:
-        - Presence
-        - Reasonable length
-        - Technical/career relevance
-
-        Note:
-        Candidate-level weighting is applied later.
-        """
+    def score_summary(self,profile: CandidateProfile) -> SectionScore:
+        
 
         if not profile.summary:
             return SectionScore(
@@ -199,14 +171,10 @@ class ATSScoringService:
             max_score=15,
         )
 
-    # =========================================================
     # Education
-    # =========================================================
+    
 
-    def score_education(
-        self,
-        profile: CandidateProfile,
-    ) -> SectionScore:
+    def score_education(self,profile: CandidateProfile ) -> SectionScore:
 
         score = 0
 
@@ -228,14 +196,11 @@ class ATSScoringService:
             max_score=10,
         )
 
-    # =========================================================
+   
     # Experience
-    # =========================================================
+   
 
-    def score_experience(
-        self,
-        profile: CandidateProfile,
-    ) -> SectionScore:
+    def score_experience(self,profile: CandidateProfile) -> SectionScore:
         """
         Score professional experience.
 
@@ -282,14 +247,11 @@ class ATSScoringService:
             max_score=20,
         )
 
-    # =========================================================
+   
     # Projects
-    # =========================================================
+ 
 
-    def score_projects(
-        self,
-        profile: CandidateProfile,
-    ) -> SectionScore:
+    def score_projects(self,profile: CandidateProfile) -> SectionScore:
         """
         Score technical projects.
 
@@ -304,10 +266,9 @@ class ATSScoringService:
 
         score = 0
 
-        # ---------------------------------------------
+   
         # Number of projects
-        # ---------------------------------------------
-
+    
         if len(profile.projects) >= 2:
             score += 5
         else:
@@ -317,20 +278,17 @@ class ATSScoringService:
         has_technologies = False
         detailed_project = False
 
-        # ---------------------------------------------
+       
         # Project quality
-        # ---------------------------------------------
+     
 
         for project in profile.projects:
 
             if project.description:
-
                 has_description = True
-
                 words = len(
                     project.description.split()
                 )
-
                 if words >= 20:
                     detailed_project = True
 
@@ -351,14 +309,11 @@ class ATSScoringService:
             max_score=20,
         )
 
-    # =========================================================
+    
     # Skills
-    # =========================================================
+ 
 
-    def score_skills(
-        self,
-        profile: CandidateProfile,
-    ) -> SectionScore:
+    def score_skills(self,profile: CandidateProfile) -> SectionScore:
 
         skills = [
             skill.lower().strip()
@@ -373,9 +328,8 @@ class ATSScoringService:
 
         score = 0
 
-        # ---------------------------------------------
         # Skill breadth
-        # ---------------------------------------------
+      
 
         if len(skills) >= 5:
             score += 5
@@ -383,9 +337,9 @@ class ATSScoringService:
         if len(skills) >= 10:
             score += 5
 
-        # ---------------------------------------------
+   
         # Technical categories
-        # ---------------------------------------------
+      
 
         categories = {
 
@@ -445,14 +399,11 @@ class ATSScoringService:
             max_score=15,
         )
 
-    # =========================================================
+    
     # Certifications
-    # =========================================================
+   
 
-    def score_certifications(
-        self,
-        profile: CandidateProfile,
-    ) -> SectionScore:
+    def score_certifications(self,profile: CandidateProfile) -> SectionScore:
         """
         Certifications are optional.
 
@@ -473,14 +424,11 @@ class ATSScoringService:
             max_score=10,
         )
 
-    # =========================================================
+    
     # Formatting
-    # =========================================================
+   
 
-    def score_formatting(
-        self,
-        profile: CandidateProfile,
-    ) -> SectionScore:
+    def score_formatting(self,profile: CandidateProfile) -> SectionScore:
         """
         Structural formatting proxy.
 
@@ -521,15 +469,12 @@ class ATSScoringService:
             max_score=10,
         )
 
-    # =========================================================
+    
     # Normalize Score
-    # =========================================================
+   
 
     @staticmethod
-    def _normalize_score(
-        raw_score: SectionScore,
-        target_max: float,
-    ) -> SectionScore:
+    def _normalize_score(raw_score: SectionScore,target_max: float) -> SectionScore:
         """
         Convert a raw section score into the
         candidate-level-specific weighted score.
@@ -564,14 +509,10 @@ class ATSScoringService:
             max_score=target_max,
         )
 
-    # =========================================================
     # Calculate Final Scores
-    # =========================================================
+  
 
-    def calculate_scores(
-        self,
-        profile: CandidateProfile,
-    ) -> dict:
+    def calculate_scores( self,profile: CandidateProfile) -> dict:
         """
         Calculate the complete deterministic ATS score.
 
@@ -592,28 +533,25 @@ class ATSScoringService:
         Overall ATS Score
         """
 
-        # -----------------------------------------------------
+ 
         # 1. Determine candidate level
-        # -----------------------------------------------------
-
+      
         candidate_level = (
             CandidateLevelService.determine_level(
                 profile.experience
             )
         )
 
-        # -----------------------------------------------------
+       
         # 2. Get candidate-level weights
-        # -----------------------------------------------------
+    
 
         weights = self.WEIGHTS[
             candidate_level
         ]
 
-        # -----------------------------------------------------
         # 3. Calculate raw scores
-        # -----------------------------------------------------
-
+        
         raw_contact = self.score_contact(
             profile
         )
@@ -650,9 +588,9 @@ class ATSScoringService:
             )
         )
 
-        # -----------------------------------------------------
+        
         # 4. Normalize according to candidate level
-        # -----------------------------------------------------
+        
 
         contact = self._normalize_score(
             raw_contact,
@@ -691,9 +629,9 @@ class ATSScoringService:
             weights["formatting"],
         )
 
-        # -----------------------------------------------------
+       
         # 5. Experience handling
-        # -----------------------------------------------------
+       
 
         if candidate_level == CandidateLevel.FRESHER:
 
@@ -711,9 +649,9 @@ class ATSScoringService:
                 weights["experience"],
             )
 
-        # -----------------------------------------------------
+       
         # 6. Calculate overall score
-        # -----------------------------------------------------
+       
 
         overall = round(
             contact.score
@@ -727,28 +665,19 @@ class ATSScoringService:
             2,
         )
 
-        # -----------------------------------------------------
+       
         # 7. Return complete scoring result
-        # -----------------------------------------------------
+        
 
         return {
             "candidate_level": candidate_level,
-
             "overall_score": overall,
-
             "contact_information": contact,
-
             "education": education,
-
             "experience": experience,
-
             "projects": projects,
-
             "skills": skills,
-
             "certifications": certifications,
-
             "formatting": formatting,
-
             "summary": summary,
         }

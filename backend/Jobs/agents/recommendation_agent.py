@@ -1,22 +1,22 @@
 """
 Recommendation Agent
 
-Responsible for orchestrating the semantic job
-recommendation pipeline.
+Responsible for orchestrating first-stage semantic
+job retrieval.
 
 Production Pipeline:
 
 CandidateProfile
         ↓
-Semantic Retrieval
+VectorService
         ↓
-Pinecone
+Candidate Embedding
         ↓
-Top-K Recommended Jobs
-
-CrossEncoder reranking is implemented separately
-but is not used in the current production pipeline
-due to deployment memory constraints.
+Pinecone Semantic Search
+        ↓
+Top 20 Retrieved Jobs
+        ↓
+GraphState.retrieved_jobs
 
 This agent performs NO:
 - LLM reasoning
@@ -30,71 +30,40 @@ services/tools.
 """
 
 from backend.graphs.state import GraphState
-
-from backend.Jobs.services.vector_service import (
-    VectorService,
-)
+from backend.Jobs.services.vector_service import VectorService
 
 
 class RecommendationAgent:
 
     def __init__(self):
+        self.vector_service = VectorService()
 
-        self.vector_service = (
-            VectorService()
-        )
-
-    def run(
-        self,
-        state: GraphState,
-    ) -> GraphState:
+    def run(self, state: GraphState) -> GraphState:
         """
-        Execute the production semantic recommendation
-        pipeline.
-
-        Flow:
-
-        GraphState
-            ↓
-        CandidateProfile
-            ↓
-        VectorService
-            ↓
-        Semantic Retrieval
-            ↓
-        Top-K Jobs
-            ↓
-        GraphState
+        Retrieve the top 20 semantically similar jobs
+        for the grounded candidate profile.
         """
 
-        # =====================================================
-        # 1. Get Candidate Profile
-        # =====================================================
+        # 1. Get candidate profile
 
-        profile = state.get(
-            "candidate_profile"
-        )
+        profile = state.get("candidate_profile")
 
         if profile is None:
             raise ValueError(
                 "Candidate profile not found."
             )
 
-        # =====================================================
-        # 2. Semantic Retrieval
-        # =====================================================
+        # 2. Retrieve top 20 jobs from Pinecone
 
-        recommended_jobs = (
+        retrieved_jobs = (
             self.vector_service.search_by_candidate(
                 candidate_profile=profile,
-                top_k=5,
+                top_k=20,
             )
         )
 
-        # =====================================================
-        # 3. Update GraphState
-        # =====================================================
+        # 3. Store retrieved jobs in GraphState
 
-        state["ranked_jobs"] = recommended_jobs
+        state["retrieved_jobs"] = retrieved_jobs
 
         return state

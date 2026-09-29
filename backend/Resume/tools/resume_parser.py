@@ -19,9 +19,9 @@ import fitz  # PyMuPDF
 from docx import Document
 
 
-# =========================================================
+
 # Text Cleaning
-# =========================================================
+
 
 def clean_text(text: str) -> str:
     """
@@ -48,9 +48,9 @@ def clean_text(text: str) -> str:
     return text.strip()
 
 
-# =========================================================
+
 # PDF Extraction
-# =========================================================
+
 
 def extract_text_from_pdf(
     file_path: Path,
@@ -71,9 +71,9 @@ def extract_text_from_pdf(
     return "\n".join(pages)
 
 
-# =========================================================
+
 # DOCX Extraction
-# =========================================================
+
 
 def extract_text_from_docx(
     file_path: Path,
@@ -100,9 +100,9 @@ def extract_text_from_docx(
     )
 
 
-# =========================================================
+
 # Main Parser
-# =========================================================
+
 
 def parse_resume(
     file_path: str | Path,
@@ -118,9 +118,9 @@ def parse_resume(
 
     path = Path(file_path)
 
-    # -----------------------------------------------------
+   
     # Validate file existence
-    # -----------------------------------------------------
+    
 
     if not path.exists():
         raise FileNotFoundError(
@@ -132,15 +132,15 @@ def parse_resume(
             f"Resume path is not a file: {path}"
         )
 
-    # -----------------------------------------------------
+    
     # Determine file type
-    # -----------------------------------------------------
+   
 
     suffix = path.suffix.lower()
 
-    # -----------------------------------------------------
+   
     # Extract text
-    # -----------------------------------------------------
+ 
 
     if suffix == ".pdf":
 
@@ -161,17 +161,17 @@ def parse_resume(
             "Only PDF and DOCX are supported."
         )
 
-    # -----------------------------------------------------
+  
     # Clean text
-    # -----------------------------------------------------
+  
 
     cleaned_text = clean_text(
         raw_text
     )
 
-    # -----------------------------------------------------
+ 
     # Validate extraction
-    # -----------------------------------------------------
+
 
     if not cleaned_text:
         raise ValueError(

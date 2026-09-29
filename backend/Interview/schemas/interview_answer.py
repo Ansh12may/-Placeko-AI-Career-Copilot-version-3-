@@ -11,28 +11,18 @@ Answer Evaluation Agent.
 
 from datetime import datetime
 from enum import Enum
-
 from pydantic import BaseModel, Field
 
 
-# ==========================================================
-# ENUMS
-# ==========================================================
+
 
 class AnswerSource(str, Enum):
     """
     Specifies how the candidate answered.
     """
-
+    
     TEXT = "Text"
-
     VOICE = "Voice"
-
-
-# ==========================================================
-# SCHEMA
-# ==========================================================
-
 
 
 class AnswerMetadata(BaseModel):

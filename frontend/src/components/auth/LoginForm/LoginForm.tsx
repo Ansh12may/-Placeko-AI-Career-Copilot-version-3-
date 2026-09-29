@@ -89,8 +89,8 @@ const { login } = useAuth();
           <button
             type="button"
             onClick={() => {
-              setEmail("demo@placeko.com");
-              setPassword("demo123");
+              setEmail("ashu@example.com");
+              setPassword("helloworld");
             }}
             className="
               whitespace-nowrap

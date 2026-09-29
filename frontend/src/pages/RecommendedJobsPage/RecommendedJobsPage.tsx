@@ -12,6 +12,7 @@ import {
 
 import {
   getRecommendedJobs,
+  verifyJobRequirement,
   type Job,
 } from "../../api/job";
 
@@ -29,6 +30,7 @@ const RecommendedJobsPage = () => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [verifyingRequirement, setVerifyingRequirement] = useState<string | null>(null);
 
   // =========================================================
   // Load Recommended Jobs
@@ -279,13 +281,13 @@ const RecommendedJobsPage = () => {
 
                       </div>
 
-                      {job.match_score !==
+                      {job.pinecone_score !==
                         null &&
-                        job.match_score !==
+                        job.pinecone_score !==
                           undefined && (
                           <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-600">
                             {formatMatchScore(
-                              job.match_score
+                              job.pinecone_score
                             )}
                           </span>
                         )}
@@ -320,15 +322,34 @@ const RecommendedJobsPage = () => {
 
           {selectedJob ? (
             <JobDetails
-          job={selectedJob}
-        onPracticeInterview={(job) => {
-        navigate("/interview", {
-      state: {
-        job,
-      },
-    });
-  }}
-/>
+            job={selectedJob}
+            onPracticeInterview={(job) => {
+              navigate("/interview", {
+                state: { job },
+              });
+            }}
+            verifyingRequirement={verifyingRequirement}
+            onVerifyRequirement={async (job, requirement) => {
+              const key = `${job.title}:${job.company}:${requirement}`;
+              try {
+                setVerifyingRequirement(key);
+                await verifyJobRequirement(job, requirement);
+                const refreshedJobs = await getRecommendedJobs();
+                setJobs(refreshedJobs);
+                const refreshedSelected = refreshedJobs.find(
+                  (item) =>
+                    item.title === job.title &&
+                    item.company === job.company &&
+                    item.location === job.location
+                );
+                setSelectedJob(refreshedSelected ?? job);
+              } catch (err) {
+                console.error("Failed to verify requirement:", err);
+              } finally {
+                setVerifyingRequirement(null);
+              }
+            }}
+          />
           ) : (
             <div className="flex h-full min-h-[500px] items-center justify-center rounded-2xl border border-slate-200 bg-white">
               <p className="text-sm text-slate-400">
@@ -351,11 +372,15 @@ const RecommendedJobsPage = () => {
 interface JobDetailsProps {
   job: Job;
   onPracticeInterview: (job: Job) => void;
+  verifyingRequirement: string | null;
+  onVerifyRequirement: (job: Job, requirement: string) => Promise<void>;
 }
 
 const JobDetails = ({
   job,
   onPracticeInterview,
+  verifyingRequirement,
+  onVerifyRequirement,
 }: JobDetailsProps) => {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -376,13 +401,13 @@ const JobDetails = ({
 
             <div className="flex flex-wrap items-center gap-2">
 
-              {job.match_score !==
+              {job.pinecone_score !==
                 null &&
-                job.match_score !==
+                job.pinecone_score !==
                   undefined && (
                   <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-600">
                     {formatMatchScore(
-                      job.match_score
+                      job.pinecone_score
                     )}{" "}
                     Resume Match
                   </span>
@@ -517,6 +542,91 @@ const JobDetails = ({
             ))}
           </div>
 
+        </section>
+      )}
+
+      {/* Job Readiness & Evidence */}
+
+      {job.job_readiness && job.job_readiness.requirements.length > 0 && (
+        <section className="mb-7 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-base font-bold text-slate-900">
+                Job Readiness &amp; Evidence
+              </h2>
+              <p className="mt-1 text-xs text-slate-500">
+                Requirements are mapped only to evidence in your resume/profile.
+                A resume gap does not mean you lack the skill.
+              </p>
+            </div>
+            <div className="flex gap-2 text-[11px] font-semibold">
+              <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-700">
+                {job.job_readiness.proven_count} Proven
+              </span>
+              <span className="rounded-full bg-amber-100 px-2.5 py-1 text-amber-700">
+                {job.job_readiness.resume_gap_count} Resume gaps
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            {job.job_readiness.requirements.map((item) => {
+              const verificationKey = `${job.title}:${job.company}:${item.requirement}`;
+              const isVerifying = verifyingRequirement === verificationKey;
+
+              return (
+                <div
+                  key={item.requirement}
+                  className="rounded-xl border border-slate-200 bg-white p-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-sm font-bold text-slate-800">
+                      {item.requirement}
+                    </span>
+
+                    {item.status === "proven" && (
+                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
+                        ✓ Proven
+                      </span>
+                    )}
+
+                    {item.status === "resume_gap" && (
+                      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700">
+                        Resume gap
+                      </span>
+                    )}
+
+                    {item.status === "candidate_confirmed" && (
+                      <span className="rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-bold text-violet-700">
+                        Candidate confirmed
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    {item.explanation}
+                  </p>
+
+                  {item.evidence.length > 0 && (
+                    <div className="mt-2 text-xs text-slate-600">
+                      Evidence: {item.evidence.map((evidence) => evidence.source).join("; ")}
+                    </div>
+                  )}
+
+                  {item.status === "resume_gap" && (
+                    <button
+                      type="button"
+                      disabled={isVerifying}
+                      onClick={() => onVerifyRequirement(job, item.requirement)}
+                      className="mt-3 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-semibold text-violet-700 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {isVerifying ? "Saving..." : "I have this skill"}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </section>
       )}
 

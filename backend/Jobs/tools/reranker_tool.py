@@ -27,26 +27,7 @@ class RerankerTool:
 
         return self.model
 
-    def score(
-        self,
-        resume_text: str,
-        job_text: str,
-    ) -> float:
-
-        if (
-            not resume_text.strip()
-            or not job_text.strip()
-        ):
-            return 0.0
-
-        model = self._get_model()
-
-        score = model.predict(
-            [(resume_text, job_text)]
-        )
-
-        return float(score[0])
-
+    
     def score_batch(
         self,
         resume_text: str,

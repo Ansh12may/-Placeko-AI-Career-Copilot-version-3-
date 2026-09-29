@@ -3,22 +3,27 @@ import AuthLayout from "../../components/auth/AuthLayout";
 import AuthCard from "../../components/auth/AuthCard";
 import LoginForm from "../../components/auth/LoginForm";
 import RegisterForm from "../../components/auth/RegisterForm";
+import { useNavigate } from "react-router-dom";
 
 type AuthMode = "login" | "register";
 
 const AuthPage = () => {
+
   const [mode, setMode] = useState<AuthMode>("login");
+  const navigate = useNavigate();
 
   const handleBack = () => {
-    window.location.href = "/";
+    navigate("/");
   };
 
   const handleLoginSuccess = () => {
-    window.location.href = "/dashboard";
+    navigate("/dashboard");
+
   };
 
   const handleRegisterSuccess = () => {
-    window.location.href = "/dashboard";
+    navigate("/dashboard");
+
   };
 
   const handleGoogle = () => {

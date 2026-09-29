@@ -14,6 +14,7 @@ import {
   type User,
 } from "../api/auth";
 
+//This interface defines the contract of your authentication context.
 
 interface AuthContextType {
   user: User | null;

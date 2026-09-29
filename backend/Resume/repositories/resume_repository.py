@@ -13,14 +13,14 @@ from backend.database.db import database
 
 
 class ResumeRepository:
-
+#property is a built-in decorator that allows you to treat a class method like a regular data attribute
     @property
     def collection(self):
         return database.db["resumes"]
 
-    # =========================================================
+   
     # Serialization Helpers
-    # =========================================================
+   
 
     @staticmethod
     def _serialize_resume(resume: dict | None):
@@ -43,14 +43,11 @@ class ResumeRepository:
             for resume in resumes
         ]
 
-    # =========================================================
+  
     # Create
-    # =========================================================
+    
 
-    async def create_resume(
-        self,
-        resume_data: dict,
-    ) -> str:
+    async def create_resume(self,resume_data: dict) -> str:
 
         result = await self.collection.insert_one(
             resume_data
@@ -58,14 +55,11 @@ class ResumeRepository:
 
         return str(result.inserted_id)
 
-    # =========================================================
+    
     # Get All User Resumes
-    # =========================================================
 
-    async def get_user_resumes(
-        self,
-        user_id: str,
-    ):
+
+    async def get_user_resumes(self,user_id: str):
 
         cursor = (
             self.collection
@@ -88,15 +82,10 @@ class ResumeRepository:
             resumes
         )
 
-    # =========================================================
     # Get Resume By ID
-    # =========================================================
+    
 
-    async def get_resume_by_id(
-        self,
-        resume_id: str,
-        user_id: str,
-    ):
+    async def get_resume_by_id(self,resume_id: str,user_id: str):
 
         resume = await self.collection.find_one(
             {
@@ -109,14 +98,11 @@ class ResumeRepository:
             resume
         )
 
-    # =========================================================
+   
     # Get Active Resume
-    # =========================================================
+    
 
-    async def get_active_resume(
-        self,
-        user_id: str,
-    ):
+    async def get_active_resume(self,user_id: str):
 
         resume = await self.collection.find_one(
             {
@@ -129,16 +115,11 @@ class ResumeRepository:
             resume
         )
 
-    # =========================================================
+   
     # Update Resume
-    # =========================================================
+  
 
-    async def update_resume(
-        self,
-        resume_id: str,
-        user_id: str,
-        update_data: dict,
-    ):
+    async def update_resume(self,resume_id: str,user_id: str,update_data: dict):
 
         return await self.collection.update_one(
             {
@@ -150,15 +131,11 @@ class ResumeRepository:
             },
         )
 
-    # =========================================================
+  
     # Delete Resume
-    # =========================================================
+  
 
-    async def delete_resume(
-        self,
-        resume_id: str,
-        user_id: str,
-    ):
+    async def delete_resume(self,resume_id: str,user_id: str):
 
         return await self.collection.delete_one(
             {
@@ -167,14 +144,11 @@ class ResumeRepository:
             }
         )
 
-    # =========================================================
+    
     # Deactivate All Resumes
-    # =========================================================
+  
 
-    async def deactivate_all_resumes(
-        self,
-        user_id: str,
-    ):
+    async def deactivate_all_resumes(self,user_id: str):
 
         await self.collection.update_many(
             {

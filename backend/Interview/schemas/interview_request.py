@@ -7,12 +7,10 @@ class InterviewType(str, Enum):
     BEHAVIORAL = "behavioral"
     MIXED = "mixed"
 
-
 class Difficulty(str, Enum):
     EASY = "easy"
     MEDIUM = "medium"
     HARD = "hard"
-
 
 class InterviewRequest(BaseModel):
     """

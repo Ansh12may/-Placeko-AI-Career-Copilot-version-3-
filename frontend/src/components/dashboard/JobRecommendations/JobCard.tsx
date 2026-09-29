@@ -12,13 +12,15 @@ interface JobCardProps {
 }
 
 const JobCard = ({ job }: JobCardProps) => {
+  console.log("JOBCARD JOB:", job);
   const navigate = useNavigate();
 
   const matchPercentage =
-    job.match_score !== null &&
-    job.match_score !== undefined
-      ? Math.round(job.match_score * 100)
-      : null;
+  job.pinecone_score !== null &&
+  job.pinecone_score !== undefined
+    ? Math.round(job.pinecone_score * 100)
+
+    : null;
 
   const companyInitial =
     job.company?.trim().charAt(0).toUpperCase() || "C";

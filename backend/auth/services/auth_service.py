@@ -7,7 +7,6 @@ Responsible for:
 - Refresh Token
 - OAuth Authentication
 - Google Authentication
-- GitHub Authentication
 - JWT Token Generation
 
 This service contains ALL authentication business logic.
@@ -55,15 +54,9 @@ class AuthService:
     def __init__(self):
         self.repository = AuthRepository()
 
-    # =========================================================
     # JWT TOKEN GENERATION
-    # =========================================================
-
-    def _generate_tokens(
-        self,
-        user_id: str,
-        email: str,
-    ):
+  
+    def _generate_tokens(self,user_id: str,email: str):
         """
         Generate JWT access and refresh tokens.
 
@@ -88,14 +81,9 @@ class AuthService:
 
         return access_token, refresh_token
 
-    # =========================================================
     # EMAIL REGISTRATION
-    # =========================================================
 
-    async def register(
-        self,
-        request,
-    ):
+    async def register(self,request):
         """
         Register a new email/password user.
         """
@@ -155,14 +143,9 @@ class AuthService:
             },
         }
 
-    # =========================================================
     # EMAIL LOGIN
-    # =========================================================
-
-    async def login(
-        self,
-        request,
-    ):
+   
+    async def login(self,request):
         """
         Login an existing email/password user.
         """
@@ -202,10 +185,7 @@ class AuthService:
                 detail="This account does not have a password.",
             )
 
-        if not verify_password(
-            request.password,
-            password_hash,
-        ):
+        if not verify_password(request.password,password_hash):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid email or password.",
@@ -228,9 +208,8 @@ class AuthService:
             },
         }
 
-    # =========================================================
+   
     # GENERIC OAUTH AUTHENTICATION
-    # =========================================================
 
     async def authenticate_oauth(
         self,
@@ -241,35 +220,9 @@ class AuthService:
         avatar: str | None = None,
         email_verified: bool = True,
     ):
-        """
-        Authenticate a user through an OAuth provider.
-
-        Supports:
-
-        Google
-        GitHub
-
-        Flow:
-
-            Provider profile
-                    ↓
-            Find provider account
-                    ↓
-              Existing user?
-                /       \
-              yes       no
-               ↓         ↓
-             Login    Check email
-                         ↓
-                   Create account
-                         ↓
-                    Generate JWT
-        """
-
-        # =====================================================
-        # 1. Validate provider
-        # =====================================================
-
+        
+    # 1. Validate provider
+       
         if provider not in {
             AuthProvider.GOOGLE,
             AuthProvider.GITHUB,
@@ -278,21 +231,17 @@ class AuthService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Unsupported OAuth provider.",
             )
-
-        # =====================================================
+        
         # 2. Validate provider ID
-        # =====================================================
 
         if not provider_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="OAuth provider ID is required.",
             )
-
-        # =====================================================
+        
         # 3. Find existing OAuth user
-        # =====================================================
-
+       
         existing_oauth_user = (
             await self.repository.get_user_by_provider(
                 provider=provider.value,
@@ -300,18 +249,13 @@ class AuthService:
             )
         )
 
-        # =====================================================
         # 4. Existing OAuth user
-        # =====================================================
-
         if existing_oauth_user:
-
             update_data = {
                 "updated_at": datetime.now(
                     timezone.utc
                 ),
             }
-
             if avatar:
                 update_data["avatar"] = avatar
 
@@ -354,10 +298,8 @@ class AuthService:
                 },
             }
 
-        # =====================================================
         # 5. Check whether email already exists
-        # =====================================================
-
+        
         existing_email_user = (
             await self.repository.get_user_by_email(
                 email
@@ -371,9 +313,8 @@ class AuthService:
                 AuthProvider.EMAIL.value,
             )
 
-            # -------------------------------------------------
             # Email/password account already exists
-            # -------------------------------------------------
+           
 
             if existing_provider == AuthProvider.EMAIL.value:
                 raise HTTPException(
@@ -385,10 +326,8 @@ class AuthService:
                     ),
                 )
 
-            # -------------------------------------------------
             # Another OAuth provider owns this email
-            # -------------------------------------------------
-
+          
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=(
@@ -397,10 +336,9 @@ class AuthService:
                 ),
             )
 
-        # =====================================================
+       
         # 6. Create new OAuth user
-        # =====================================================
-
+     
         now = datetime.now(
             timezone.utc
         )
@@ -423,9 +361,8 @@ class AuthService:
             )
         )
 
-        # =====================================================
         # 7. Generate Placeko JWT
-        # =====================================================
+        
 
         access_token, refresh_token = (
             self._generate_tokens(
@@ -447,9 +384,9 @@ class AuthService:
             },
         }
 
-    # =========================================================
+  
     # GOOGLE LOGIN
-    # =========================================================
+   
 
     async def google_login(self):
         """
@@ -462,9 +399,8 @@ class AuthService:
                 build_google_authorization_url(),
         }
 
-    # =========================================================
+   
     # GOOGLE CALLBACK
-    # =========================================================
 
     async def google_callback(
         self,
@@ -490,9 +426,9 @@ class AuthService:
         Placeko JWT
         """
 
-        # -----------------------------------------------------
+       
         # 1. Exchange authorization code
-        # -----------------------------------------------------
+       
 
         try:
 
@@ -525,9 +461,9 @@ class AuthService:
                 ),
             )
 
-        # -----------------------------------------------------
+        
         # 2. Fetch Google user profile
-        # -----------------------------------------------------
+       
 
         try:
 
@@ -550,9 +486,8 @@ class AuthService:
                 ),
             )
 
-        # -----------------------------------------------------
         # 3. Extract Google profile
-        # -----------------------------------------------------
+       
 
         google_id = google_user.get(
             "id"
@@ -587,10 +522,9 @@ class AuthService:
                 ),
             )
 
-        # -----------------------------------------------------
+      
         # 4. Delegate user authentication to generic OAuth
-        # -----------------------------------------------------
-
+       
         return await self.authenticate_oauth(
             provider=AuthProvider.GOOGLE,
             provider_id=google_id,
@@ -600,9 +534,9 @@ class AuthService:
             email_verified=email_verified,
         )
 
-    # =========================================================
+   
     # REFRESH TOKEN
-    # =========================================================
+
 
     async def refresh(
         self,
@@ -676,9 +610,9 @@ class AuthService:
             },
         }
 
-    # =========================================================
+   
     # LOGOUT
-    # =========================================================
+  
 
     async def logout(self):
         """

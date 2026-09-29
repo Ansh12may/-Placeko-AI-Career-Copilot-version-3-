@@ -12,27 +12,18 @@ contain the actual interview questions.
 
 from enum import Enum
 from typing import List
-
 from pydantic import BaseModel, Field
 
-
-# ==========================================================
 # ENUMS
-# ==========================================================
 
 class InterviewMode(str, Enum):
     """
     Type of interview to conduct.
     """
-
     MIXED = "Mixed"
-
     TECHNICAL = "Technical"
-
     BEHAVIORAL = "Behavioral"
-
     PROJECT = "Project"
-
     HR = "HR"
 
 
@@ -40,23 +31,16 @@ class DifficultyLevel(str, Enum):
     """
     Difficulty level of interview.
     """
-
     EASY = "Easy"
-
     MEDIUM = "Medium"
-
     HARD = "Hard"
 
-
-# ==========================================================
 # SCHEMA
-# ==========================================================
 
 class InterviewPlan(BaseModel):
     """
     Blueprint of an interview session.
     """
-
     interview_mode: InterviewMode = Field(
         ...,
         description="Type of interview."

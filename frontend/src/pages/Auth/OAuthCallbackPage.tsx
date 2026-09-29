@@ -11,19 +11,16 @@ const OAuthCallbackPage = () => {
   useEffect(() => {
     const handleOAuthCallback = async () => {
       try {
-        // =====================================================
         // Get tokens returned by backend
-        // =====================================================
-
+        
         const accessToken =
           searchParams.get("access_token");
 
         const refreshToken =
           searchParams.get("refresh_token");
 
-        // =====================================================
         // Validate tokens
-        // =====================================================
+       
 
         if (!accessToken || !refreshToken) {
           throw new Error(
@@ -31,9 +28,8 @@ const OAuthCallbackPage = () => {
           );
         }
 
-        // =====================================================
         // Store Placeko JWT tokens
-        // =====================================================
+        
 
         localStorage.setItem(
           "access_token",
@@ -45,9 +41,9 @@ const OAuthCallbackPage = () => {
           refreshToken
         );
 
-        // =====================================================
+   
         // Verify authentication
-        // =====================================================
+     
 
         await getCurrentUser();
 

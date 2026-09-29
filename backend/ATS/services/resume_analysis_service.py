@@ -14,33 +14,15 @@ Deterministic numerical scoring is handled by:
 """
 
 from pydantic import BaseModel, Field
-from langchain_core.messages import (
-    HumanMessage,
-    SystemMessage,
-)
-
+from langchain_core.messages import (HumanMessage,SystemMessage)
 from backend.config.settings import settings
-
-from backend.Resume.schemas.candidate import (
-    CandidateProfile,
-)
-
-from backend.ATS.prompts.resume_analysis_prompt import (
-    RESUME_ANALYSIS_PROMPT,
-)
-
-from backend.ATS.services.candidate_level_service import (
-    CandidateLevelService,
-)
-
-from backend.utils.llm_formatter import (
-    resume_to_llm_text,
-)
+from backend.Resume.schemas.candidate import (CandidateProfile)
+from backend.ATS.prompts.resume_analysis_prompt import (RESUME_ANALYSIS_PROMPT)
+from backend.ATS.services.candidate_level_service import (CandidateLevelService)
+from backend.utils.llm_formatter import (resume_to_llm_text)
 
 
-# =========================================================
 # Structured LLM Output
-# =========================================================
 
 class ResumeQualitativeAnalysis(BaseModel):
     """
@@ -86,23 +68,18 @@ class ResumeQualitativeAnalysis(BaseModel):
     )
 
 
-# =========================================================
+
 # Resume Analysis Service
-# =========================================================
 
 class ResumeAnalysisService:
 
     def __init__(self):
         self.llm = settings.llm
 
-    # =====================================================
+    
     # Candidate Level
-    # =====================================================
-
-    def determine_candidate_level(
-        self,
-        profile: CandidateProfile,
-    ):
+   
+    def determine_candidate_level(self,profile: CandidateProfile):
         """
         Determine the candidate's career level.
 
@@ -117,14 +94,11 @@ class ResumeAnalysisService:
             )
         )
 
-    # =====================================================
+  
     # Build Prompt
-    # =====================================================
+   
 
-    def build_prompt(
-        self,
-        profile: CandidateProfile,
-    ) -> str:
+    def build_prompt(self,profile: CandidateProfile) -> str:
         """
         Build the qualitative resume analysis prompt.
 
@@ -150,14 +124,11 @@ class ResumeAnalysisService:
             resume=resume_text,
         )
 
-    # =====================================================
+    
     # Analyze Resume
-    # =====================================================
+    
 
-    def analyze_resume(
-        self,
-        profile: CandidateProfile,
-    ) -> dict:
+    def analyze_resume(self,profile: CandidateProfile) -> dict:
         """
         Generate qualitative resume feedback.
 
@@ -192,9 +163,8 @@ class ResumeAnalysisService:
             ),
         ]
 
-        # -------------------------------------------------
         # Structured LLM output
-        # -------------------------------------------------
+        
 
         structured_llm = (
             self.llm.with_structured_output(
@@ -207,9 +177,9 @@ class ResumeAnalysisService:
             messages
         )
 
-        # -------------------------------------------------
+      
         # Pydantic result
-        # -------------------------------------------------
+        
 
         if isinstance(
             result,
@@ -217,9 +187,9 @@ class ResumeAnalysisService:
         ):
             return result.model_dump()
 
-        # -------------------------------------------------
+      
         # Dictionary result
-        # -------------------------------------------------
+  
 
         if isinstance(
             result,
@@ -227,9 +197,9 @@ class ResumeAnalysisService:
         ):
             return result
 
-        # -------------------------------------------------
+        
         # Generic Pydantic-compatible result
-        # -------------------------------------------------
+        
 
         if hasattr(
             result,
@@ -237,9 +207,9 @@ class ResumeAnalysisService:
         ):
             return result.model_dump()
 
-        # -------------------------------------------------
+       
         # Defensive fallback
-        # -------------------------------------------------
+        
 
         return {
             "strengths": [],

@@ -24,6 +24,7 @@ It does NOT contain:
 from datetime import datetime
 from uuid import uuid4
 from typing import List
+import asyncio
 
 from backend.Applications.schemas.application import (
     Application,
@@ -40,6 +41,21 @@ from backend.Applications.repositories.application_repository import (
     ApplicationRepository,
 )
 
+from uuid import uuid4
+
+from langgraph.types import Command
+
+from backend.graphs.workflow import graph
+from backend.graphs.state import GraphState
+
+from backend.Resume.repositories.resume_repository import (
+    ResumeRepository,
+)
+
+from backend.Resume.schemas.candidate import (
+    CandidateProfile,
+)
+
 
 class ApplicationService:
     """
@@ -48,11 +64,11 @@ class ApplicationService:
 
     def __init__(self):
         self.repository = ApplicationRepository()
+        self.resume_repository = ResumeRepository()
 
-    # =========================================================
+ 
     # CREATE APPLICATION
-    # =========================================================
-
+    
     async def create_application(
         self,
         request: ApplicationCreateRequest,
@@ -326,3 +342,116 @@ class ApplicationService:
             raise ValueError(
                 "Failed to delete application."
             )
+
+    async def start_application_workflow(
+    self,
+    job,
+    user_id: str,
+):
+        """
+        Start the agentic application workflow.
+
+        The workflow prepares the application and pauses at
+        the human approval checkpoint.
+        """
+
+        # -----------------------------------------------------
+        # 1. Get active resume
+        # -----------------------------------------------------
+
+        resume = (
+            await self.resume_repository.get_active_resume(
+                user_id=user_id
+            )
+        )
+
+        if not resume:
+            raise ValueError(
+                "No active resume found. "
+                "Please upload a resume first."
+            )
+
+        # -----------------------------------------------------
+        # 2. Get candidate profile
+        # -----------------------------------------------------
+
+        candidate_profile_data = (
+            resume.get("candidate_profile")
+        )
+
+        if not candidate_profile_data:
+            raise ValueError(
+                "Candidate profile not found "
+                "for active resume."
+            )
+
+        candidate_profile = (
+            CandidateProfile.model_validate(
+                candidate_profile_data
+            )
+        )
+
+        # -----------------------------------------------------
+        # 3. Create workflow thread
+        # -----------------------------------------------------
+
+        thread_id = str(uuid4())
+
+        # -----------------------------------------------------
+        # 4. Prepare GraphState
+        # -----------------------------------------------------
+
+        initial_state: GraphState = {
+            "messages": [],
+
+            "resume_path": None,
+            "resume_text": None,
+
+            "candidate_profile": candidate_profile,
+
+            "jobs": None,
+            "ranked_jobs": None,
+            "recommended_jobs": None,
+
+            "selected_job": job,
+
+            "interview_session": None,
+
+            "application_id": None,
+            "application_status": None,
+            "application_materials": None,
+            "human_approval": None,
+            "application_result": None,
+
+            "workflow_type": "application",
+            "application_thread_id": thread_id,
+
+            "next_node": None,
+            "error": None,
+            "ats_report": None,
+        }
+
+        # -----------------------------------------------------
+        # 5. Configure LangGraph thread
+        # -----------------------------------------------------
+
+        config = {
+            "configurable": {
+                "thread_id": thread_id,
+            }
+        }
+
+        # -----------------------------------------------------
+        # 6. Start graph
+        # -----------------------------------------------------
+
+        result = await asyncio.to_thread(
+            graph.invoke,
+            initial_state,
+            config,
+        )
+
+        return {
+            "thread_id": thread_id,
+            "state": result,
+        }

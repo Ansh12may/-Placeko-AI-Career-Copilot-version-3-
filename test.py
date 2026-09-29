@@ -1059,216 +1059,218 @@ InterviewPlan
 #     main()
 
 
-from pprint import pprint
-from datetime import datetime
+# from pprint import pprint
+# from datetime import datetime
 
-from backend.graphs.workflow import graph
+# from backend.graphs.workflow import graph
 
-from backend.Interview.services.interview_planner_service import (
-    InterviewPlannerService,
-)
+# from backend.Interview.services.interview_planner_service import (
+#     InterviewPlannerService,
+# )
 
-from backend.Interview.services.question_generation_service import (
-    QuestionGenerationService,
-)
+# from backend.Interview.services.question_generation_service import (
+#     QuestionGenerationService,
+# )
 
-from backend.Interview.services.answer_evaluation_service import (
-    AnswerEvaluationService,
-)
+# from backend.Interview.services.answer_evaluation_service import (
+#     AnswerEvaluationService,
+# )
 
-from backend.Interview.services.interview_report_service import (
-    InterviewReportService,
-)
+# from backend.Interview.services.interview_report_service import (
+#     InterviewReportService,
+# )
 
-from backend.Interview.schemas.interview_plan import (
-    InterviewMode,
-    DifficultyLevel,
-)
+# from backend.Interview.schemas.interview_plan import (
+#     InterviewMode,
+#     DifficultyLevel,
+# )
 
-from backend.Interview.schemas.interview_question import (
-    QuestionCategory,
-)
+# from backend.Interview.schemas.interview_question import (
+#     QuestionCategory,
+# )
 
-from backend.Interview.schemas.interview_answer import (
-    InterviewAnswer,
-    AnswerSource,
-)
+# from backend.Interview.schemas.interview_answer import (
+#     InterviewAnswer,
+#     AnswerSource,
+# )
 
-from backend.Interview.schemas.interview_session import (
-    InterviewSession,
-    InterviewStatus,
-)
+# from backend.Interview.schemas.interview_session import (
+#     InterviewSession,
+#     InterviewStatus,
+# )
 
-from backend.Interview.schemas.question_answer_pair import (
-    QuestionAnswerPair,
-)
+# from backend.Interview.schemas.question_answer_pair import (
+#     QuestionAnswerPair,
+# )
 
-RESUME_PATH = "/Users/ashutoshkushwaha/Desktop/Ashutosh_resume.pdf"
-
-
-def sample_answer(question: str) -> str:
-    """
-    Returns a realistic sample answer.
-    """
-
-    return """
-In WanderNest I implemented authentication using JWT.
-
-When a user logs in, the backend verifies the user's
-credentials using bcrypt to compare the hashed password.
-
-If authentication succeeds, a JWT token is generated
-and returned to the frontend.
-
-Protected routes use middleware that validates the JWT
-before allowing access.
-
-Passwords are never stored in plain text.
-
-If I were improving the project further,
-I would add refresh tokens,
-role-based authorization,
-and HTTP-only cookies.
-"""
+# RESUME_PATH = "/Users/ashutoshkushwaha/Desktop/Ashutosh_resume.pdf"
 
 
-def main():
+# def sample_answer(question: str) -> str:
+#     """
+#     Returns a realistic sample answer.
+#     """
 
-    # =====================================================
-    # Resume + Jobs
-    # =====================================================
+#     return """
+# In WanderNest I implemented authentication using JWT.
 
-    print("=" * 80)
-    print("Resume + Job Pipeline")
-    print("=" * 80)
+# When a user logs in, the backend verifies the user's
+# credentials using bcrypt to compare the hashed password.
 
-    state = graph.invoke(
-        {
-            "messages": [],
-            "resume_path": RESUME_PATH,
-        }
-    )
+# If authentication succeeds, a JWT token is generated
+# and returned to the frontend.
 
-    profile = state["candidate_profile"]
-    selected_job = state["ranked_jobs"][0]
+# Protected routes use middleware that validates the JWT
+# before allowing access.
 
-    # =====================================================
-    # Planner
-    # =====================================================
+# Passwords are never stored in plain text.
 
-    planner = InterviewPlannerService()
-
-    plan = planner.generate_plan(
-        profile=profile,
-        job=selected_job,
-        interview_mode=InterviewMode.MIXED,
-        difficulty=DifficultyLevel.MEDIUM,
-    )
-
-    print()
-    print("=" * 80)
-    print("Interview Plan")
-    print("=" * 80)
-
-    pprint(plan.model_dump(), sort_dicts=False)
-
-    # =====================================================
-    # Session
-    # =====================================================
-
-    session = InterviewSession(
-        candidate=profile,
-        target_job=selected_job,
-        interview_plan=plan,
-        status=InterviewStatus.IN_PROGRESS,
-        started_at=datetime.utcnow(),
-    )
-
-    question_service = QuestionGenerationService()
-    evaluation_service = AnswerEvaluationService()
-
-    previous_questions = []
-
-    TOTAL_QUESTIONS = 3
-
-    categories = [
-        QuestionCategory.TECHNICAL,
-        QuestionCategory.PROJECT,
-        QuestionCategory.BEHAVIORAL,
-    ]
-
-    # =====================================================
-    # Interview Loop
-    # =====================================================
-
-    for index in range(TOTAL_QUESTIONS):
-
-        print()
-        print("=" * 80)
-        print(f"Question {index+1}")
-        print("=" * 80)
-
-        question = question_service.generate_question(
-            profile=profile,
-            job=selected_job,
-            interview_plan=plan,
-            question_number=index + 1,
-            category=categories[index],
-            previous_questions=previous_questions,
-        )
-
-        previous_questions.append(question.question)
-
-        print(question.question)
-
-        answer = InterviewAnswer(
-            question_id=question.question_id,
-            transcript=sample_answer(question.question),
-            source=AnswerSource.TEXT,
-            duration_seconds=90,
-        )
-
-        feedback = evaluation_service.evaluate(
-            profile=profile,
-            job=selected_job,
-            question=question,
-            answer=answer,
-        )
-
-        pair = QuestionAnswerPair(
-            question=question,
-            answer=answer,
-            feedback=feedback,
-            interaction_completed=True,
-        )
-
-        session.history.append(pair)
-
-        print()
-        print("Overall Score:", feedback.overall.score)
-
-    # =====================================================
-    # Finish Session
-    # =====================================================
-
-    session.status = InterviewStatus.COMPLETED
-    session.ended_at = datetime.utcnow()
-
-    # =====================================================
-    # Report
-    # =====================================================
-
-    report_service = InterviewReportService()
-
-    report = report_service.generate_report(session)
-
-    print()
-    print("=" * 80)
-    print("FINAL REPORT")
-    print("=" * 80)
-
-    pprint(report.model_dump(), sort_dicts=False)
+# If I were improving the project further,
+# I would add refresh tokens,
+# role-based authorization,
+# and HTTP-only cookies.
+# """
 
 
-if __name__ == "__main__":
-    main()
+# def main():
+
+#     # =====================================================
+#     # Resume + Jobs
+#     # =====================================================
+
+#     print("=" * 80)
+#     print("Resume + Job Pipeline")
+#     print("=" * 80)
+
+#     state = graph.invoke(
+#         {
+#             "messages": [],
+#             "resume_path": RESUME_PATH,
+#         }
+#     )
+
+#     profile = state["candidate_profile"]
+#     selected_job = state["ranked_jobs"][0]
+
+#     # =====================================================
+#     # Planner
+#     # =====================================================
+
+#     planner = InterviewPlannerService()
+
+#     plan = planner.generate_plan(
+#         profile=profile,
+#         job=selected_job,
+#         interview_mode=InterviewMode.MIXED,
+#         difficulty=DifficultyLevel.MEDIUM,
+#     )
+
+#     print()
+#     print("=" * 80)
+#     print("Interview Plan")
+#     print("=" * 80)
+
+#     pprint(plan.model_dump(), sort_dicts=False)
+
+#     # =====================================================
+#     # Session
+#     # =====================================================
+
+#     session = InterviewSession(
+#         candidate=profile,
+#         target_job=selected_job,
+#         interview_plan=plan,
+#         status=InterviewStatus.IN_PROGRESS,
+#         started_at=datetime.utcnow(),
+#     )
+
+#     question_service = QuestionGenerationService()
+#     evaluation_service = AnswerEvaluationService()
+
+#     previous_questions = []
+
+#     TOTAL_QUESTIONS = 3
+
+#     categories = [
+#         QuestionCategory.TECHNICAL,
+#         QuestionCategory.PROJECT,
+#         QuestionCategory.BEHAVIORAL,
+#     ]
+
+#     # =====================================================
+#     # Interview Loop
+#     # =====================================================
+
+#     for index in range(TOTAL_QUESTIONS):
+
+#         print()
+#         print("=" * 80)
+#         print(f"Question {index+1}")
+#         print("=" * 80)
+
+#         question = question_service.generate_question(
+#             profile=profile,
+#             job=selected_job,
+#             interview_plan=plan,
+#             question_number=index + 1,
+#             category=categories[index],
+#             previous_questions=previous_questions,
+#         )
+
+#         previous_questions.append(question.question)
+
+#         print(question.question)
+
+#         answer = InterviewAnswer(
+#             question_id=question.question_id,
+#             transcript=sample_answer(question.question),
+#             source=AnswerSource.TEXT,
+#             duration_seconds=90,
+#         )
+
+#         feedback = evaluation_service.evaluate(
+#             profile=profile,
+#             job=selected_job,
+#             question=question,
+#             answer=answer,
+#         )
+
+#         pair = QuestionAnswerPair(
+#             question=question,
+#             answer=answer,
+#             feedback=feedback,
+#             interaction_completed=True,
+#         )
+
+#         session.history.append(pair)
+
+#         print()
+#         print("Overall Score:", feedback.overall.score)
+
+#     # =====================================================
+#     # Finish Session
+#     # =====================================================
+
+#     session.status = InterviewStatus.COMPLETED
+#     session.ended_at = datetime.utcnow()
+
+#     # =====================================================
+#     # Report
+#     # =====================================================
+
+#     report_service = InterviewReportService()
+
+#     report = report_service.generate_report(session)
+
+#     print()
+#     print("=" * 80)
+#     print("FINAL REPORT")
+#     print("=" * 80)
+
+#     pprint(report.model_dump(), sort_dicts=False)
+
+
+# if __name__ == "__main__":
+#     main()
+
+

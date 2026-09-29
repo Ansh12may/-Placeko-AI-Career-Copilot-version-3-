@@ -9,73 +9,31 @@ Responsible for:
 - Updating GraphState
 
 This agent performs resume understanding only.
-
-It does NOT:
-- Store resumes in MongoDB
-- Calculate ATS scores
-- Search for jobs
-- Perform job ranking
 """
 
-from langchain_core.messages import (
-    HumanMessage,
-    SystemMessage,
-)
-
+from langchain_core.messages import (HumanMessage,SystemMessage)
 from backend.utils.base_agent import BaseAgent
 from backend.graphs.state import GraphState
 from backend.config.settings import settings
-
-from backend.Resume.prompts.resume_prompt import (
-    RESUME_SYSTEM_PROMPT,
-)
-
-from backend.Resume.schemas.candidate import (
-    CandidateProfile,
-)
-
-from backend.Resume.tools.resume_parser import (
-    parse_resume,
-)
+from backend.Resume.prompts.resume_prompt import (RESUME_SYSTEM_PROMPT)
+from backend.Resume.schemas.candidate import (CandidateProfile)
+from backend.Resume.tools.resume_parser import (parse_resume)
+from backend.Resume.services.grounding_service import GroundingService
 
 
 class ResumeAgent(BaseAgent):
-    """
-    AI Agent responsible for understanding
-    a candidate's resume.
-
-    Workflow:
-
-        GraphState
-            ↓
-        Resume Path
-            ↓
-        Parse Resume
-            ↓
-        Extract Resume Text
-            ↓
-        Invoke LLM
-            ↓
-        CandidateProfile
-            ↓
-        Update GraphState
-    """
-
+    
     def __init__(self):
         super().__init__()
 
         self.llm = settings.llm
 
         self.system_prompt = RESUME_SYSTEM_PROMPT
+        self.grounding_service = GroundingService()
 
-    # =========================================================
     # Prepare Input
-    # =========================================================
-
-    def prepare_input(
-        self,
-        state: GraphState,
-    ) -> str:
+    
+    def prepare_input(self, state: GraphState) -> str:
         """
         Extract resume path from GraphState.
         """
@@ -89,18 +47,12 @@ class ResumeAgent(BaseAgent):
 
         return resume_path
 
-    # =========================================================
     # Resume Parser
-    # =========================================================
-
-    def invoke_tools(
-        self,
-        resume_path: str,
-    ) -> str:
+   
+    def invoke_tools(self,resume_path: str) -> str:
         """
         Parse the resume and extract text.
         """
-
         resume_text = parse_resume(resume_path)
 
         if not resume_text:
@@ -110,14 +62,9 @@ class ResumeAgent(BaseAgent):
 
         return resume_text
 
-    # =========================================================
     # LLM Extraction
-    # =========================================================
 
-    def invoke_llm(
-    self,
-    resume_text: str,
-) -> CandidateProfile:
+    def invoke_llm(self,resume_text: str) -> CandidateProfile:
         """
         Extract candidate information from the resume.
 
@@ -201,15 +148,10 @@ class ResumeAgent(BaseAgent):
             ),
         ]
 
-        # -----------------------------------------------------
         # Ask Groq for JSON
-        # -----------------------------------------------------
-
         response = self.llm.invoke(messages)
 
-        # -----------------------------------------------------
-        # Parse JSON
-        # -----------------------------------------------------
+        # Parse JSON .We're going to manually parse the LLM's JSON response
 
         import json
 
@@ -219,7 +161,7 @@ class ResumeAgent(BaseAgent):
             raise ValueError(
                 "LLM returned non-string content."
             )
-        content = content.strip()
+        content = content.strip() #This removes unnecessary leading/trailing whitespace.
         if content.startswith("{") and not content.endswith("}"):
             content += "}"
 
@@ -230,19 +172,14 @@ class ResumeAgent(BaseAgent):
                 f"LLM returned invalid JSON: {error}"
             ) from error
 
-        # -----------------------------------------------------
+        
         # Normalize projects
-        # -----------------------------------------------------
-
+       
         projects = data.get("projects", [])
-
         normalized_projects = []
-
         for project in projects:
-
             if not isinstance(project, dict):
                 continue
-
             title = project.get("title")
 
             # Handle LLM occasionally returning "name"
@@ -264,10 +201,8 @@ class ResumeAgent(BaseAgent):
 
         data["projects"] = normalized_projects
 
-        # -----------------------------------------------------
         # Normalize certifications
-        # -----------------------------------------------------
-
+        
         certifications = data.get(
             "certifications",
             [],
@@ -317,10 +252,9 @@ class ResumeAgent(BaseAgent):
             normalized_certifications
         )
 
-        # -----------------------------------------------------
+        
         # Normalize education
-        # -----------------------------------------------------
-
+      
         education = data.get(
             "education",
             [],
@@ -352,43 +286,59 @@ class ResumeAgent(BaseAgent):
 
         data["education"] = normalized_education
 
-        # -----------------------------------------------------
+       
         # Normalize experience
-        # -----------------------------------------------------
-
+       
         experience = data.get(
             "experience",
             [],
         )
 
-        if not isinstance(
-            experience,
-            list,
-        ):
-            data["experience"] = []
+        if not isinstance(experience, list):
+            experience = []
 
-        # -----------------------------------------------------
+        normalized_experience = []
+        for item in experience:
+            if not isinstance(item, dict):
+                continue
+
+            role = item.get("role")
+            # Handle LLM occasionally returning "title" / "position" / "job_title"
+            if not role:
+                role = (
+                    item.get("title")
+                    or item.get("position")
+                    or item.get("job_title")
+                )
+
+            company = item.get("company") or item.get("organization") or ""
+
+            normalized_experience.append(
+                {
+                    "company": company,
+                    "role": role or "Unspecified Role",
+                    "duration": item.get("duration"),
+                    "description": item.get("description"),
+                }
+            )
+
+        data["experience"] = normalized_experience
+
+        
         # Final Pydantic validation
-        # -----------------------------------------------------
-
+   
         candidate = CandidateProfile.model_validate(
             data
         )
-
         return candidate
-    # =========================================================
+  
     # Validation
-    # =========================================================
-
-    def validate(
-        self,
-        candidate: CandidateProfile,
-    ) -> CandidateProfile:
+   
+    def validate(self,candidate: CandidateProfile) -> CandidateProfile:
         """
         CandidateProfile is already validated
         through Pydantic.
         """
-
         if candidate is None:
             raise ValueError(
                 "Resume extraction returned no candidate profile."
@@ -396,34 +346,22 @@ class ResumeAgent(BaseAgent):
 
         return candidate
 
-    # =========================================================
     # Update Graph State
-    # =========================================================
-
-    def update_state(
-        self,
-        state: GraphState,
-        resume_text: str,
-        candidate: CandidateProfile,
-    ) -> GraphState:
+   
+    def update_state(self,state: GraphState,resume_text: str,candidate: CandidateProfile) -> GraphState:
         """
         Store parsed resume text and structured
         candidate profile in GraphState.
         """
-
         state["resume_text"] = resume_text
         state["candidate_profile"] = candidate
 
         return state
 
-    # =========================================================
+   
     # Run Agent
-    # =========================================================
-
-    def run(
-        self,
-        state: GraphState,
-    ) -> GraphState:
+   
+    def run(self,state: GraphState) -> GraphState:
         """
         Execute the complete resume analysis step.
         """
@@ -440,11 +378,19 @@ class ResumeAgent(BaseAgent):
         # 4. Validate
         candidate = self.validate(candidate)
 
-        # 5. Update state
-        state = self.update_state(
-            state,
-            resume_text,
-            candidate,
+        #5 Grounding the response
+        grounding_result = (
+        self.grounding_service.ground_with_verifier(
+            candidate=candidate,
+            resume_text=resume_text,
         )
+    )
 
+        # 6. Update state
+        state = self.update_state(
+        state=state,
+        resume_text=resume_text,
+        candidate=candidate,
+    )
+        state["grounding_result"] = grounding_result
         return state

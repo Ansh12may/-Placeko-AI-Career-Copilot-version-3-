@@ -56,9 +56,7 @@ async def google_login():
     """
     Redirect user to Google OAuth.
     """
-
     result = await auth_service.google_login()
-
     return RedirectResponse(
         url=result["authorization_url"]
     )
