@@ -78,6 +78,7 @@ class InterviewPlannerAgent:
             interview_mode,
             difficulty,
         ) = self.prepare_input(state)
+        
 
         interview_plan = self.planner_service.generate_plan(
             profile=profile,
@@ -85,6 +86,7 @@ class InterviewPlannerAgent:
             interview_mode=interview_mode,
             difficulty=difficulty,
         )
+     
 
         state["interview_plan"] = interview_plan
 

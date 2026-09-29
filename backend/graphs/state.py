@@ -6,6 +6,8 @@ from backend.ATS.schemas.ats_report import ATSReport
 from backend.Jobs.schemas.job import Job
 from langchain_core.messages import AnyMessage
 from backend.Interview.schemas.interview_session import (InterviewSession)
+from backend.Interview.schemas.interview_plan import (InterviewPlan)
+from backend.Interview.schemas.interview_question import (InterviewQuestion,QuestionCategory)
 import operator
 
 
@@ -49,8 +51,14 @@ class GraphState(TypedDict):
     selected_job: Optional[Job]
 
 
+    
     # Interview
     interview_session: Optional[InterviewSession]
+    interview_plan: Optional[InterviewPlan]
+    current_question: Optional[str]
+    question_number: Optional[int]
+    current_category: Optional[str]
+    previous_questions: Optional[list[str]]
 
    
     # Workflow Metadata

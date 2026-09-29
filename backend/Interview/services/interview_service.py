@@ -177,12 +177,14 @@ class InterviewService:
 
         planner_state["workflow_type"] = "interview_plan"
 
+        
+
         planner_state = await asyncio.to_thread(
             graph.invoke,
             planner_state,
             {"configurable": {"thread_id": str(uuid4())}},
         )
-
+       
         interview_plan = planner_state.get(
             "interview_plan"
         )
@@ -236,11 +238,13 @@ class InterviewService:
 
         question_state["workflow_type"] = "interview_next_question"
 
+        print("QUESTION STATE BEFORE GRAPH:", question_state)
         question_state = await asyncio.to_thread(
             graph.invoke,
             question_state,
             {"configurable": {"thread_id": str(uuid4())}},
         )
+        print("QUESTION STATE AFTER GRAPH:", question_state)
 
         current_question = question_state.get(
             "current_question"

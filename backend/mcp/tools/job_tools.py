@@ -673,3 +673,43 @@ async def analyze_fresh_job_readiness(
             else None
         ),
     }
+
+# ============================================================
+# GET RECOMMENDED JOBS
+# ============================================================
+
+@mcp.tool()
+async def get_recommended_jobs(
+    user_id: str,
+    resume_id: str,
+) -> dict[str, Any]:
+    """
+    Retrieve the user's already-generated job recommendations.
+
+    This does NOT perform job searching, ranking, or LLM reasoning.
+    It only reads the persisted recommendation snapshot.
+    """
+
+    jobs = await job_repository.get_recommendations(
+        user_id=user_id,
+        resume_id=resume_id,
+    )
+
+    if not jobs:
+        return {
+            "found": False,
+            "resume_id": resume_id,
+            "jobs": [],
+            "message": "No persisted job recommendations found.",
+        }
+
+    return {
+        "found": True,
+        "resume_id": resume_id,
+        "jobs": [
+            job.model_dump(mode="json")
+            for job in jobs
+        ],
+        "count": len(jobs),
+        "source": "persisted_recommendations",
+    }

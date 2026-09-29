@@ -59,22 +59,34 @@ class InterviewPlan(BaseModel):
     )
 
     technical_questions: int = Field(
-        ...,
-        ge=0,
-        description="Number of technical questions."
-    )
+
+    default=0,
+
+    ge=0,
+
+    description="Number of technical questions."
+
+)
 
     behavioral_questions: int = Field(
-        ...,
+
+        default=0,
+
         ge=0,
+
         description="Number of behavioral questions."
-    )
+
+)
 
     project_questions: int = Field(
-        ...,
+
+        default=0,
+
         ge=0,
+
         description="Number of project-based questions."
-    )
+
+)
 
     followup_questions: int = Field(
         ...,
