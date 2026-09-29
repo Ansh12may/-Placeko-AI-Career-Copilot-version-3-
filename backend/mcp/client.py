@@ -1,4 +1,5 @@
 import asyncio
+import os
 from contextlib import AsyncExitStack
 from typing import Any
 
@@ -7,18 +8,29 @@ from mcp.client.stdio import stdio_client
 
 
 class MCPClient:
-    """
-    Client for communicating with the Placeko MCP server.
-    """
-
     def __init__(self):
         self.session: ClientSession | None = None
         self.exit_stack = AsyncExitStack()
 
     async def connect(self):
+        # MCP stdio subprocesses receive a restricted environment.
+        # Explicitly pass the environment variables required by the
+        # MCP server so it can connect to the same MongoDB instance
+        # as the main FastAPI application.
+        mcp_env = {}
+
+        for key in (
+            "MONGODB_URL",
+            "DATABASE_NAME",
+        ):
+            value = os.getenv(key)
+            if value is not None:
+                mcp_env[key] = value
+
         server_params = StdioServerParameters(
             command="python",
             args=["-m", "backend.mcp.run_server"],
+            env=mcp_env,
         )
 
         read_stream, write_stream = await self.exit_stack.enter_async_context(
@@ -36,7 +48,6 @@ class MCPClient:
             raise RuntimeError("MCP client is not connected.")
 
         result = await self.session.list_tools()
-
         return result.tools
 
     async def call_tool(
@@ -47,10 +58,7 @@ class MCPClient:
         if self.session is None:
             raise RuntimeError("MCP client is not connected.")
 
-        return await self.session.call_tool(
-            name,
-            arguments,
-        )
+        return await self.session.call_tool(name, arguments)
 
     async def close(self):
         await self.exit_stack.aclose()
